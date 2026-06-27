@@ -1,0 +1,21 @@
+{
+  // TypeScript 编译配置 — 继承 Astro 严格模式预设
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    // 模块路径别名，与 astro.config.mjs 中的 vite.resolve.alias 保持一致
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@layouts/*": ["./src/layouts/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@types/*": ["./src/types/*"],
+      "@data/*": ["./src/data/*"]
+    }
+  },
+  // 包含源文件和 Astro 自动生成的类型定义
+  "include": ["src/**/*.ts", "src/**/*.astro", ".astro/types.d.ts"],
+  // 排除构建产物和依赖
+  "exclude": ["dist", "node_modules"]
+}

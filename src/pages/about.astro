@@ -1,0 +1,103 @@
+---
+// @page /about — 关于页面：个人介绍、博客理念、技术栈与联系方式
+// Data sources: siteConfig (社交媒体链接)
+import Layout from "@layouts/Layout.astro";
+import { siteConfig } from "@/config";
+---
+
+<Layout title="About" slug="about">
+  <div class="pt-2 lg:pt-0">
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">关于</h1>
+
+    {/* ===== 正文区域 — 博客理念与个人介绍 ===== */}
+    <div
+      class="prose prose-lg max-w-none
+                prose-p:text-[var(--color-text)]/85 prose-p:leading-relaxed
+                prose-a:text-[var(--color-primary)] prose-a:no-underline hover:prose-a:underline
+                prose-strong:text-[var(--color-text)]
+                prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4
+                prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3
+                prose-li:text-[var(--color-text)]/85
+                prose-code:font-[var(--font-mono)] prose-code:text-sm
+                prose-code:bg-[var(--color-code-bg)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                prose-code:before:content-none prose-code:after:content-none"
+    >
+      {/* 博主身份 */}
+      <p>
+        Hi，我是 <strong>Swayopus</strong>（欧阳钧泓 / Merrick Jun Ouyang）。
+      </p>
+      <p>
+        你可能听过 <strong>Memex</strong> 这个词。1945 年，范内瓦·布什在《诚如所思》中构想了一台能存储、关联、检索所有知识的设备——Memex，意为"记忆的扩展"。但
+        Memex 真正的革命性不在于"存"，而在于"联"：它不再以字母或分类作为检索路径，而是在知识之间建立可命名的关联轨迹，将原本各自独立的单元按照关联强度连接起来，形成可回溯的网状结构。这套机制直接启发了超文本的诞生。
+      </p>
+      <p>这个博客，就是我自己的 Memex。</p>
+
+      {/* 关于我 */}
+      <h2>关于我</h2>
+      <p>
+        技术工作者，写前端，爱折腾工具链和性能优化，对「让东西变快」有种偏执的认真。业余时间写博客，偶尔挖点新坑。
+      </p>
+
+      {/* 关于这个博客 */}
+      <h2>关于这个博客</h2>
+      <p>
+        Memex 的核心是两件事：<strong>记录</strong> 和 <strong>关联</strong>。
+      </p>
+      <p>这里写下的内容，都围绕这个逻辑展开：</p>
+      <ul>
+        <li>
+          <strong>技术记录</strong
+          >：踩过的坑、学到的技巧、值得分享的实践。不追求教程感，更像是对自己思考的整理和沉淀。
+        </li>
+        <li>
+          <strong>个人感悟</strong
+          >：有些想法在脑子里转久了，就想写下来理一理。阅读、成长、日常观察，想到什么写什么。
+        </li>
+        <li><strong>事件记录</strong>：值得记住的瞬间、有意思的遇见。怕忘记，所以写下来。</li>
+      </ul>
+      <p>
+        <strong>Swayopus</strong>——Sway（流动）+
+        Opus（作品）——大概就是在不断变化中，留下一些值得被记住的东西。
+      </p>
+      <p>
+        这里不追热点，不搞标题党。文章会定期更新，但节奏由我自己决定。如果你恰好读到某篇觉得有意思，那就是缘分。
+      </p>
+      <p>
+        欢迎来我的记忆库翻翻。邮箱在页面底部，或者 <a href="/about/">About</a> 页面也有。
+      </p>
+
+      {/* 技术栈 */}
+      <h2>技术栈</h2>
+      <ul>
+        <li>框架：<a href="https://astro.build">Astro</a></li>
+        <li>样式：<a href="https://tailwindcss.com">Tailwind CSS v4</a></li>
+        <li>代码高亮：<a href="https://shiki.style/">Shiki</a></li>
+        <li>
+          字体：<a href="https://github.com/lxgw/LxgwWenKai">LXGW WenKai</a>、<a
+            href="https://www.jetbrains.com/lp/mono/">JetBrains Mono</a
+          >、Snell Roundhand
+        </li>
+        <li>
+          参考：<a href="https://github.com/Neomelt/Neomelt_blog">Neomelt Blog</a>、<a
+            href="https://github.com/CuteLeaf/Firefly">Firefly</a
+          >、<a href="https://github.com/radishzzz/astro-theme-retypeset">Retypeset</a>、<a
+            href="https://github.com/satnaing/astro-paper">AstroPaper</a
+          >
+        </li>
+      </ul>
+
+      {/* 联系方式 */}
+      <h2>联系</h2>
+      <ul>
+        {
+          siteConfig.social.github && (
+            <li>
+              GitHub：<a href={siteConfig.social.github}>{siteConfig.social.github}</a>
+            </li>
+          )
+        }
+        <li>RSS：<a href="/rss.xml">/rss.xml</a></li>
+      </ul>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,77 @@
+---
+// @component Header — 网站头部组件，包含头像、站点标题（首页为 h1，子页面为 div）和打字机字幕
+import { siteConfig } from "@/config";
+import TypewriterText from "@components/TypewriterText.astro";
+
+// 首页检测：首页渲染 <h1>（语义化），子页面渲染 <div>（每页仅一个 h1）
+const isHome = Astro.url.pathname === "/" || Astro.url.pathname === "";
+---
+
+<header class="mb-6 lg:mb-8 h-[11rem] lg:h-[13.5rem]">
+  {/* 头像 — 链接到首页，仅当配置了头像时显示 */}
+  {
+    siteConfig.avatar && (
+      <a href="/" class="block mb-4 lg:mb-5">
+        <img
+          src={siteConfig.avatar}
+          alt={siteConfig.title}
+          class="w-16 h-16 lg:w-20 lg:h-20 rounded-full object-cover
+                  ring-2 ring-[var(--color-border)] hover:ring-[var(--color-primary)]/50
+                  transition-all duration-300"
+          width="80"
+          height="80"
+        />
+      </a>
+    )
+  }
+
+  <div class="mb-3">
+    {/* 标题：首页用 <h1> 保证语义 HTML；内页用 <div>（每页只应有一个 <h1>） */}
+    {
+      isHome ? (
+        <h1 class="mb-[1.25rem] font-bold font-[var(--font-title)] text-[2.25rem] leading-[1.4] text-[var(--color-primary)]">
+          <a
+            href="/"
+            class="inline-block text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
+            transition:name="site-title"
+          >
+            {siteConfig.title}
+          </a>
+        </h1>
+      ) : (
+        <div class="mb-[1.25rem] font-bold font-[var(--font-title)] text-[2.25rem] leading-[1.4] text-[var(--color-primary)]">
+          <a
+            href="/"
+            class="inline-block text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
+            transition:name="site-title"
+          >
+            {siteConfig.title}
+          </a>
+        </div>
+      )
+    }
+  </div>
+
+  {/* 副标题区域：首页显示打字机动画；子页面显示静态双语格言 */}
+  <div
+    class="text-base text-[var(--color-text-muted)] font-[var(--font-nav)] leading-relaxed h-[2.5rem] lg:text-lg lg:h-[3.2rem]"
+  >
+    {
+      isHome ? (
+        <TypewriterText
+          lines={siteConfig.banner.subtitles}
+          typingSpeed={40}
+          deletingSpeed={20}
+          pauseDuration={5000}
+          once={true}
+        />
+      ) : (
+        <>
+          Ars longa, vita brevis.
+          <br />
+          艺术春秋，人生朝露。
+        </>
+      )
+    }
+  </div>
+</header>

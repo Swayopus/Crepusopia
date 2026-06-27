@@ -1,0 +1,113 @@
+---
+// @page /privacy — 隐私政策：数据收集、使用目的、第三方服务与用户权利说明
+// Data sources: 无（纯静态内容）
+import Layout from "@layouts/Layout.astro";
+---
+
+<Layout title="隐私政策" slug="privacy">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题 ===== */}
+    <h1 class="text-3xl font-bold text-[var(--color-text)] mb-3">隐私政策</h1>
+    <p class="text-base text-[var(--color-text-muted)] leading-snug mb-8">
+      最后更新：2026 年 6 月 24 日
+    </p>
+
+    {/* ===== 政策适用范围说明 ===== */}
+    <p class="text-base text-[var(--color-text-muted)] leading-snug mb-8">
+      本政策用于说明本站在访问、偏好设置和第三方服务场景下对数据的处理方式。本站为个人静态博客，不设用户系统与后端数据库。
+    </p>
+
+    {/* ===== 第 1 节：收集的信息类型 ===== */}
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold text-[var(--color-text)] mb-3">1. 收集的信息类型</h2>
+      <ul class="space-y-2 text-base text-[var(--color-text-muted)] leading-snug list-disc pl-5">
+        <li>
+          <strong class="text-[var(--color-text)]">访问日志</strong>：本站托管于静态站点服务（Vercel
+          或 GitHub
+          Pages），不运行后端程序。静态托管平台可能在基础设施层面保留短期访问日志（IP、请求路径、时间戳等），这些日志由平台管理，本站不会主动收集或查看。
+        </li>
+        <li>
+          <strong class="text-[var(--color-text)]">评论信息</strong
+          >：本站当前未接入第三方评论系统。未来若添加评论功能，昵称、邮箱与评论内容将由对应的评论服务方（如
+          Waline 或 Giscus）独立处理与存储，届时将更新本政策说明。
+        </li>
+        <li>
+          <strong class="text-[var(--color-text)]">本地偏好</strong
+          >：主题模式（亮色/暗色）和每日一言缓存通过浏览器 <code
+            class="bg-[var(--color-code-bg)] px-1 rounded">localStorage</code
+          > 保存在你的设备本地，不上传至任何服务器，可由你随时清除。
+        </li>
+      </ul>
+    </section>
+
+    {/* ===== 第 2 节：数据使用目的 ===== */}
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold text-[var(--color-text)] mb-3">2. 数据使用目的</h2>
+      <ul class="space-y-2 text-base text-[var(--color-text-muted)] leading-snug list-disc pl-5">
+        <li>本地存储的主题偏好仅用于在亮色与暗色模式之间切换，以提供舒适的阅读体验。</li>
+        <li>每日一言的缓存数据仅用于减少对一言 API 的重复请求，避免触发其访问频率限制。</li>
+        <li>本站不使用分析工具、追踪脚本或广告服务，不会对你的访问行为进行记录或画像。</li>
+      </ul>
+    </section>
+
+    {/* ===== 第 3 节：第三方服务与链接 ===== */}
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold text-[var(--color-text)] mb-3">3. 第三方服务与链接</h2>
+      <ul class="space-y-2 text-base text-[var(--color-text-muted)] leading-snug list-disc pl-5">
+        <li>
+          <strong class="text-[var(--color-text)]">一言 API</strong
+          >（v1.hitokoto.cn）：首页每日一言通过一言开放接口获取。访问该接口时，你的网络请求信息（IP
+          地址、User-Agent 等）可能被一言服务记录，其数据处理方式受一言隐私政策约束。详见 <a
+            href="https://developer.hitokoto.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[var(--color-primary)] hover:underline">一言开发者文档</a
+          >。
+        </li>
+        <li>
+          <strong class="text-[var(--color-text)]">KaTeX CDN</strong
+          >（cdn.jsdelivr.net）：文章中的数学公式渲染所需的 CSS 样式表从 jsDelivr 公共 CDN
+          加载。加载过程中你的浏览器会向 CDN 节点发起请求。
+        </li>
+        <li>
+          <strong class="text-[var(--color-text)]">外部链接</strong
+          >：本站友链页面及文章正文中链接到的第三方博客与站点由其各自维护，其隐私规则不受本站控制。建议在访问第三方站点前阅读其隐私政策与使用条款。
+        </li>
+      </ul>
+    </section>
+
+    {/* ===== 第 4 节：用户权利 ===== */}
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold text-[var(--color-text)] mb-3">4. 用户权利</h2>
+      <ul class="space-y-2 text-base text-[var(--color-text-muted)] leading-snug list-disc pl-5">
+        <li>
+          你可以随时通过浏览器开发者工具或设置页面清除本地存储（<code
+            class="bg-[var(--color-code-bg)] px-1 rounded">localStorage</code
+          >），以删除主题偏好和一言缓存数据。
+        </li>
+        <li>本站无用户账户系统，你无需注册或登录即可浏览全部内容。</li>
+        <li>
+          如需反馈数据处理问题、请求删除特定内容，或对隐私政策有任何疑问，可通过以下方式联系站长，本站将在合理范围内尽快响应。
+        </li>
+      </ul>
+    </section>
+
+    {/* ===== 联系方式 ===== */}
+    <div
+      class="border border-dashed border-[var(--color-border)] rounded-xl p-4 bg-[var(--color-bg-alt)]/50"
+    >
+      <p class="text-base text-[var(--color-text)] leading-snug mb-2"><strong>联系方式</strong></p>
+      <p class="text-base text-[var(--color-text-muted)] leading-snug mb-1">
+        📧 swayopus@swayopus.space
+      </p>
+      <p class="text-base text-[var(--color-text-muted)] leading-snug">
+        🔗 <a
+          href="https://github.com/Swayopus"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-[var(--color-primary)] hover:underline">GitHub</a
+        >
+      </p>
+    </div>
+  </div>
+</Layout>

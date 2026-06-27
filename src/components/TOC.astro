@@ -1,0 +1,272 @@
+---
+// @component TOC — 文章目录组件，支持 IntersectionObserver 滚动跟踪。
+//                  Desktop: 固定侧边栏，高亮当前可见标题。
+//                  Mobile: 悬浮按钮 → 右侧滑出抽屉面板。
+interface Heading { depth: number; text: string; slug: string; }
+interface Props { headings: Heading[]; mode?: "sidebar" | "inline" }
+const { headings = [], mode = "inline" } = Astro.props;
+const showDesktop = mode !== "inline";
+const showMobile = mode !== "sidebar";
+
+/** 根据标题文本生成 URL 安全的 slug（支持中文字符） */
+function slugify(t: string): string {
+  return t.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, "-").replace(/(^-|-$)/g, "");
+}
+---
+
+{headings.length > 1 && (<>
+  {/* 移动端 TOC：悬浮按钮 + 弹出面板（桌面端隐藏） */}
+  {showMobile && (<div id="toc-mobile-root" class="lg:hidden">
+    {/* 悬浮切换按钮 */}
+    <button id="toc-mobile-toggle" class="toc-mobile-fab" aria-label="目录">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="4" y1="6" x2="20" y2="6" />
+        <line x1="4" y1="12" x2="16" y2="12" />
+        <line x1="4" y1="18" x2="12" y2="18" />
+      </svg>
+    </button>
+
+    {/* 弹出面板 */}
+    <nav id="toc-mobile-card" class="toc-mobile-card">
+      {/* 面板头部 */}
+      <div class="toc-card-header">
+        <span class="toc-card-title">目录</span>
+        <button id="toc-mobile-close" class="toc-card-close" aria-label="关闭">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      {/* 目录列表 — 仅显示 h2-h3 */}
+      <ul class="toc-card-list">
+        {headings.filter(h => h.depth <= 3).map(h => (
+          <li style={`padding-left:${(h.depth - 2) * 0.75}rem`}>
+            <a href={`#${slugify(h.text)}`} class="toc-card-link">{h.text}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>)}
+
+  {/* 桌面端 TOC：侧边栏固定 */}
+  {showDesktop && (<nav id="toc-desktop" class="hidden lg:block max-h-[calc(100vh-8rem)] overflow-y-auto text-base leading-relaxed" style="scrollbar-width:thin">
+    <div class="text-sm font-medium text-[var(--color-text-muted)]/60 uppercase tracking-wider mb-3">On this page</div>
+    <ul class="space-y-1 border-l-2 border-[var(--color-border)]">
+      {headings.filter(h => h.depth <= 3).map(h => (
+        <li>
+          <a
+            href={`#${slugify(h.text)}`}
+            data-toc={slugify(h.text)}
+            class={`block py-1 pl-3 border-l-2 -ml-[2px] border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/50 transition-all ${h.depth >= 3 ? "pl-6" : ""} leading-relaxed`}
+          >{h.text}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>)}
+</>)}
+
+<style is:global>
+  /* ── 移动端 TOC 悬浮按钮 ── */
+  .toc-mobile-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1rem;
+    z-index: 95;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--color-card-border);
+    background: var(--color-card-bg);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .toc-mobile-fab:active {
+    transform: scale(0.93);
+  }
+  .toc-mobile-fab.toc-active {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  /* ── 弹出面板 — 定位在 FAB 上方 ── */
+  .toc-mobile-card {
+    position: fixed;
+    bottom: 5rem; /* 悬浮按钮上方 */
+    right: 1rem;
+    width: 18rem;
+    max-width: calc(100vw - 2rem);
+    max-height: 55vh;
+    z-index: 150;
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .toc-mobile-card.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  /* ── 面板头部 ── */
+  .toc-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .toc-card-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text);
+  }
+  .toc-card-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .toc-card-close:active {
+    background: var(--color-bg-alt);
+  }
+
+  /* ── 可滚动列表 ── */
+  .toc-card-list {
+    list-style: none;
+    padding: 0.5rem 0.25rem;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .toc-card-link {
+    display: block;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    transition: background 0.15s, color 0.15s;
+  }
+  .toc-card-link:active,
+  .toc-card-link:hover {
+    background: var(--color-bg-alt);
+    color: var(--color-primary);
+  }
+</style>
+
+{/* TOC 交互脚本：移动端弹出面板 + 桌面端 IntersectionObserver 滚动跟踪 */}
+<script>
+  /** 初始化移动端 TOC 交互（幂等：通过 data-toc-bound 标记防止重复绑定） */
+  function initTocMobile() {
+    const toggle = document.getElementById("toc-mobile-toggle");
+    const card = document.getElementById("toc-mobile-card");
+    const close = document.getElementById("toc-mobile-close");
+    if (!toggle || !card || !close) return false;
+    if (toggle.dataset.tocBound === "1") return true;
+
+    function open() {
+      card.classList.add("open");
+      toggle.classList.add("toc-active");
+    }
+    function close_() {
+      card.classList.remove("open");
+      toggle.classList.remove("toc-active");
+    }
+
+    toggle.addEventListener("click", function () {
+      card.classList.contains("open") ? close_() : open();
+    });
+    close.addEventListener("click", close_);
+
+    document.addEventListener("click", function (e) {
+      if (card.classList.contains("open") &&
+          !card.contains(e.target) &&
+          e.target !== toggle && !toggle.contains(e.target)) {
+        close_();
+      }
+    });
+
+    card.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", close_);
+    });
+
+    toggle.dataset.tocBound = "1";
+    return true;
+  }
+
+  function bootTocMobile() {
+    if (!initTocMobile()) {
+      requestAnimationFrame(function () { initTocMobile(); });
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootTocMobile);
+  } else {
+    bootTocMobile();
+  }
+  document.addEventListener("astro:page-load", function () {
+    bootTocMobile();
+  });
+
+  // ── 桌面端 IntersectionObserver 滚动跟踪 ──
+  function initTocObserver() {
+    var links = document.querySelectorAll('#toc-desktop [data-toc]');
+    if (links.length === 0) return;
+
+    var headingMap = [];
+    links.forEach(function(link) {
+      var id = link.getAttribute('data-toc');
+      if (!id) return;
+      var el = document.getElementById(id);
+      if (el) headingMap.push({ el: el, link: link });
+    });
+    if (headingMap.length === 0) return;
+
+    var observer = new IntersectionObserver(
+      function(entries) {
+        var activeEl = null;
+        var minTop = Infinity;
+        entries.forEach(function(e) {
+          if (e.isIntersecting && e.boundingClientRect.top < minTop) {
+            minTop = e.boundingClientRect.top;
+            activeEl = e.target;
+          }
+        });
+        if (!activeEl) return;
+        headingMap.forEach(function(h) {
+          h.link.setAttribute('data-active', h.el === activeEl ? 'true' : 'false');
+        });
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+    );
+
+    headingMap.forEach(function(h) { observer.observe(h.el); });
+  }
+
+  initTocObserver();
+  document.addEventListener('astro:page-load', initTocObserver);
+</script>

@@ -1,0 +1,254 @@
+---
+// @layout Layout — 页面根 HTML 骨架
+// 布局结构（桌面端 3 列 CSS Grid）：
+//   左侧栏：Header（头像+标题）+ Navbar（导航）+ Footer（社交/搜索/主题）
+//   中间主内容区：<slot /> —— 由各页面模板填充
+//   右侧栏（可选）：<slot name="widgets" /> —— 用于文章目录等组件
+// 移动端（<1024px）：侧边栏改为滑出抽屉，顶栏固定吸附
+// 数据来源：siteConfig
+import { siteConfig } from "@/config";
+import { ClientRouter } from "astro:transitions";
+import Head from "@components/Head.astro";
+import Header from "@components/Header.astro";
+import Navbar from "@components/Navbar.astro";
+import Footer from "@components/Footer.astro";
+import SearchModal from "@components/SearchModal.astro";
+import "@styles/font.css";
+import "@styles/global.css";
+
+export interface LayoutProps {
+  /** 页面标题 */
+  title?: string;
+  /** 页面描述（用于 SEO） */
+  description?: string;
+  /** Open Graph 图片路径 */
+  ogImage?: string;
+  /** 当前页面 slug */
+  slug?: string;
+  /** 是否显示右侧组件栏（如文章目录） */
+  rightWidgets?: boolean;
+}
+
+const { title, description, ogImage, slug, rightWidgets = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang={siteConfig.lang}>
+  <head>
+    <Head title={title} description={description} ogImage={ogImage} slug={slug} />
+    <ClientRouter fallback="none" />
+  </head>
+  <body>
+    <!-- 移动端顶栏 — 桌面端隐藏 -->
+    <div class="mobile-topbar lg:hidden">
+      <a
+        href="/"
+        class="font-bold font-[var(--font-title)] text-lg text-[var(--color-primary)] no-underline truncate"
+      >
+        {siteConfig.title}
+      </a>
+      <button id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle menu">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+        >
+          <line x1="4" y1="6" x2="20" y2="6" class="menu-line menu-line-top"></line>
+          <line x1="4" y1="12" x2="20" y2="12" class="menu-line menu-line-mid"></line>
+          <line x1="4" y1="18" x2="20" y2="18" class="menu-line menu-line-bot"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 移动端侧边栏遮罩层 — 桌面端隐藏 -->
+    <div id="sidebar-overlay" class="sidebar-overlay lg:hidden"></div>
+
+    <!--
+      三列 CSS Grid 主容器
+      - 移动端：单列流式布局
+      - 桌面端 (lg)：3 列网格
+        grid-cols-[18rem_minmax(0,1fr)_16rem]
+        列1 左侧栏：18rem 固定宽
+        列2 主内容：弹性伸缩 minmax(0,1fr)
+        列3 右侧栏：16rem 固定宽（可选）
+      - translate-x-[6rem]：整体向右偏移，使左侧栏更靠近屏幕中央
+    -->
+    <div
+      class="mx-auto w-full px-[min(7.25vw,3.731rem)] py-10
+             lg:grid lg:gap-x-6 lg:px-8 lg:py-20 lg:max-w-[87rem]
+             lg:grid-cols-[18rem_minmax(0,1fr)_16rem] lg:translate-x-[6rem]"
+    >
+      <!-- 左侧栏：sticky 吸附，包含 Header + Navbar（上）和 Footer（下） -->
+      <aside
+        id="sidebar"
+        class="lg:sticky lg:top-20 lg:self-start lg:flex lg:flex-col lg:min-h-[calc(100vh-13rem)] lg:mr-2"
+      >
+        <div>
+          <Header />
+          <Navbar />
+        </div>
+        <div class="mt-auto">
+          <Footer />
+        </div>
+      </aside>
+
+      <!-- 中间主内容区：min-w-0 防止内容溢出撑破网格 -->
+      <main class="min-w-0">
+        <slot />
+      </main>
+
+      <!-- 右侧栏（可选）：仅在 rightWidgets 为 true 时渲染 -->
+      {
+        rightWidgets && (
+          <aside class="hidden lg:block">
+            <slot name="widgets" />
+          </aside>
+        )
+      }
+    </div>
+    <SearchModal />
+  </body>
+</html>
+
+<style is:global>
+  /* ── 移动端侧边栏抽屉（最大宽度 1023px）── */
+  @media (max-width: 1023px) {
+    .mobile-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem max(1rem, env(safe-area-inset-right)) 0.7rem
+        max(1rem, env(safe-area-inset-left));
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
+    }
+
+    .menu-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--color-text);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .menu-toggle-btn:active {
+      background: var(--color-bg-alt);
+    }
+
+    /* 汉堡菜单 → X 动画 */
+    .menu-toggle-btn .menu-line {
+      transition:
+        transform 0.3s ease,
+        opacity 0.2s ease;
+      transform-origin: center;
+    }
+    .menu-open .menu-line-top {
+      transform: translateY(6px) rotate(45deg);
+    }
+    .menu-open .menu-line-mid {
+      opacity: 0;
+    }
+    .menu-open .menu-line-bot {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+
+    /* 侧边栏抽屉 */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 14rem;
+      max-width: 80vw;
+      z-index: 100;
+      background: var(--color-bg);
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      padding: 5rem 1.5rem 1.5rem; /* 顶部留出额外空间，将 header/nav 向下推 */
+      display: flex;
+      flex-direction: column;
+    }
+    #sidebar.open {
+      transform: translateX(0);
+      box-shadow: 2px 0 24px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 遮罩层 */
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+</style>
+
+<script>
+  /** 切换侧边栏开/关状态 */
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const toggle = document.getElementById("menu-toggle");
+    if (!sidebar || !overlay || !toggle) return;
+    const open = sidebar.classList.toggle("open");
+    overlay.classList.toggle("open", open);
+    toggle.classList.toggle("menu-open", open);
+  }
+
+  /** 关闭侧边栏 */
+  function closeSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const toggle = document.getElementById("menu-toggle");
+    if (!sidebar || !overlay || !toggle) return;
+    sidebar.classList.remove("open");
+    overlay.classList.remove("open");
+    toggle.classList.remove("menu-open");
+  }
+
+  document.addEventListener("click", (e) => {
+    var target = e.target;
+    // 点击汉堡按钮 → 切换侧边栏
+    if (target.closest("#menu-toggle")) {
+      toggleSidebar();
+      return;
+    }
+    // 点击遮罩层 → 关闭侧边栏
+    if (target.closest("#sidebar-overlay")) {
+      closeSidebar();
+      return;
+    }
+    // 点击侧边栏内的任意链接或按钮 → 关闭侧边栏（导航、社交图标、搜索、主题等）
+    if (target.closest("#sidebar a, #sidebar button")) {
+      closeSidebar();
+    }
+  });
+
+  // 页面切换后自动关闭侧边栏
+  document.addEventListener("astro:after-swap", () => {
+    closeSidebar();
+  });
+  document.addEventListener("astro:page-load", () => {
+    closeSidebar();
+  });
+</script>

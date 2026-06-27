@@ -1,0 +1,15 @@
+---
+// @component PostCard — 文章卡片入口，根据 layout 属性分发到 List 或 Grid 布局
+import type { Post } from "@utils/content";
+import PostCardList from "./PostCardList.astro";
+import PostCardGrid from "./PostCardGrid.astro";
+
+interface Props {
+  post: Post;
+  layout?: "list" | "grid";
+}
+
+const { post, layout = "list" } = Astro.props;
+---
+
+{layout === "grid" ? <PostCardGrid post={post} /> : <PostCardList post={post} />}

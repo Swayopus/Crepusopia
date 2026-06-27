@@ -1,0 +1,273 @@
+---
+// @page /posts/:slug — 单篇文章详情页：正文渲染、目录导航、JSON-LD 结构化数据、标签、上下篇导航
+// Data sources: getCollection("posts"), extractHeadings(), getReadingStats(), siteConfig
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Layout.astro";
+import TOC from "@components/TOC.astro";
+import { extractHeadings } from "@utils/headings";
+import { getReadingStats, formatReadingStats } from "@utils/reading-time";
+import { formatDate, getPostSlug, getPostUrl } from "@utils/index";
+import { siteConfig } from "@/config";
+import Breadcrumb from "@components/Breadcrumb.astro";
+import CodeCopyButton from "@components/CodeCopyButton.astro";
+
+/**
+ * 为每篇非草稿/非隐藏文章生成静态路径。
+ * 每项携带文章数据及前一篇/后一篇引用作为 props，用于上下篇导航。
+ */
+export async function getStaticPaths() {
+  const posts = await getCollection("posts", (p) => !p.data.draft && !p.data.hidden);
+  // 按发布日期倒序排列，使上一篇/下一篇导航符合直觉
+  const sorted = posts.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+
+  return sorted.map((post, i) => ({
+    params: { slug: post.id.replace(/^posts\//, "").replace(/\.(md|mdx)$/, "") },
+    props: {
+      post,
+      prev: sorted[i + 1] ?? null, // 较旧的文章（按时间线为上一篇）
+      next: sorted[i - 1] ?? null, // 较新的文章（按时间线为下一篇）
+    },
+  }));
+}
+
+const { post, prev, next } = Astro.props;
+const { data, body: rawBody } = post;
+const { Content } = await post.render();
+
+// 格式化发布日期为中文格式
+const dateStr = formatDate(data.published);
+
+// 从原始 Markdown 正文中提取标题（h2-h4），用于生成目录
+const headings = rawBody ? extractHeadings(rawBody) : [];
+
+// 阅读时间统计
+const stats = rawBody ? getReadingStats(rawBody) : { words: 0, minutes: 0 };
+
+// ===== 构建 JSON-LD 结构化数据（SEO） =====
+const slug = getPostSlug(post);
+const postUrl = `${siteConfig.siteUrl}posts/${slug}/`;
+const isoPublished = data.published.toISOString();
+const isoModified = data.updated ? data.updated.toISOString() : isoPublished;
+const ogImage = data.image
+  ? `${siteConfig.siteUrl}${data.image.replace(/^\//, "")}`
+  : `${siteConfig.siteUrl}og.png`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `${postUrl}#webpage`,
+      url: postUrl,
+      name: data.title,
+      isPartOf: { "@type": "WebSite", "@id": `${siteConfig.siteUrl}#website` },
+      // 面包屑导航结构化数据
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Posts", item: `${siteConfig.siteUrl}posts/` },
+          ...(data.category
+            ? [
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: data.category,
+                  item: `${siteConfig.siteUrl}categories/${data.category.toLowerCase()}/`,
+                },
+              ]
+            : []),
+          { "@type": "ListItem", position: data.category ? 3 : 2, name: data.title },
+        ],
+      },
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": `${postUrl}#blogposting`,
+      mainEntityOfPage: { "@id": `${postUrl}#webpage` },
+      headline: data.title,
+      description: data.description || "",
+      image: ogImage,
+      datePublished: isoPublished,
+      dateModified: isoModified,
+      author: { "@type": "Person", name: siteConfig.author, url: siteConfig.siteUrl },
+      publisher: {
+        "@type": "Person",
+        "@id": `${siteConfig.siteUrl}#identity`,
+        name: siteConfig.author,
+      },
+    },
+  ],
+};
+
+const jsonLdString = JSON.stringify(jsonLd);
+---
+
+<Layout
+  title={data.title}
+  description={data.description || ""}
+  slug={`posts/${slug}`}
+  rightWidgets={true}
+>
+  {/* JSON-LD 结构化数据（SEO） */}
+  <script type="application/ld+json" set:html={jsonLdString} />
+
+  {/* 桌面端目录：侧边栏悬浮挂件（lg+ 可见） */}
+  <div slot="widgets" class="hidden lg:block sticky top-28 pt-[10.5rem] lg:pl-8">
+    <TOC headings={headings} mode="sidebar" />
+  </div>
+
+  <article class="pt-2 lg:pt-0">
+    {/* 面包屑导航 */}
+    <Breadcrumb
+      items={[
+        { label: "Posts", href: "/posts/" },
+        ...(data.category
+          ? [{ label: data.category, href: `/categories/${data.category.toLowerCase()}/` }]
+          : []),
+        { label: data.title },
+      ]}
+    />
+
+    {/* ===== 文章标题 ===== */}
+    <h1
+      class="text-3xl md:text-4xl font-bold text-[var(--color-text)] mb-3 leading-tight"
+      style="font-family: var(--font-heading)"
+    >
+      {data.title}
+    </h1>
+
+    {/* ===== 元信息栏：发布日期、更新日期、分类、阅读时间 ===== */}
+    <div
+      class="flex flex-wrap items-center gap-x-3 gap-y-1 text-base
+                text-[var(--color-text-muted)] font-[var(--font-nav)] font-bold mb-2"
+    >
+      <time datetime={data.published.toISOString()}>{dateStr}</time>
+      {
+        data.updated && data.updated.getTime() !== data.published.getTime() && (
+          <>
+            <>
+              <span aria-hidden="true">·</span>
+              <time datetime={data.updated.toISOString()}>
+                Updated{" "}
+                {formatDate(data.updated)}
+              </time>
+            </>
+          </>
+        )
+      }
+      {
+        data.category && (
+          <>
+            <>
+              <span aria-hidden="true">·</span>
+              <a
+                href={`/categories/${data.category.toLowerCase()}/`}
+                class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:underline"
+              >
+                {data.category}
+              </a>
+            </>
+          </>
+        )
+      }
+      <span aria-hidden="true">·</span>
+      <span>{formatReadingStats(stats)}</span>
+    </div>
+
+    {/* 作者信息 */}
+    {
+      data.author && (
+        <div class="text-base text-[var(--color-text-muted)]/70 font-[var(--font-nav)] mb-2">
+          By {data.author}
+        </div>
+      )
+    }
+
+    {/* ===== 文章正文（prose 排版） ===== */}
+    <div
+      data-pagefind-body
+      class="prose prose-lg max-w-none
+                prose-headings:font-[var(--font-heading)]
+                prose-h2:text-2xl prose-h2:mt-2 prose-h2:mb-4 prose-h2:font-semibold
+                prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:font-semibold
+                prose-p:text-[var(--color-text)]/85 prose-p:leading-relaxed
+                prose-a:text-[var(--color-primary)] prose-a:no-underline hover:prose-a:underline
+                prose-code:font-[var(--font-mono)] prose-code:text-sm
+                prose-code:bg-[var(--color-code-bg)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                prose-code:before:content-none prose-code:after:content-none
+                prose-pre:bg-[var(--color-code-bg)] prose-pre:border prose-pre:border-[var(--color-border)]
+                prose-pre:rounded-lg prose-pre:text-sm
+                prose-blockquote:border-l-[3px] prose-blockquote:border-[var(--color-primary)]
+                prose-blockquote:text-[var(--color-text-muted)] prose-blockquote:not-italic
+                prose-blockquote:bg-[var(--color-bg-alt)]/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
+                prose-img:rounded-xl
+                prose-li:text-[var(--color-text)]/85
+                prose-strong:text-[var(--color-text)]
+                prose-hr:border-[var(--color-border)]
+                [&_table]:text-sm [&_table]:w-full
+                [&_thead]:border-b-2 [&_thead]:border-[var(--color-border)]
+                [&_th]:px-4 [&_th]:py-2 [&_th]:text-left
+                [&_td]:px-4 [&_td]:py-2 [&_td]:border-b [&_td]:border-[var(--color-border)]"
+    >
+      <Content />
+
+      {/* ===== 文章底部标签 ===== */}
+      {
+        data.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mt-10 pt-6 border-t border-[var(--color-border)]">
+            {data.tags.map((t) => (
+              <a
+                href={`/tags/?tag=${t}`}
+                class="px-3 py-1.5 text-sm rounded-md bg-[var(--color-bg-alt)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors font-[var(--font-nav)]"
+              >
+                #{t}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    {/* ===== 上一篇 / 下一篇导航 ===== */}
+    <nav class="mt-12 pt-6 border-t border-[var(--color-border)] grid grid-cols-2 gap-4">
+      {
+        prev ? (
+          <a
+            href={getPostUrl(prev)}
+            class="group p-3 rounded-lg border border-[var(--color-card-border)] bg-[var(--color-card-bg)]
+                  hover:border-[var(--color-primary)]/30 transition-colors text-left"
+          >
+            <div class="text-xs text-[var(--color-text-muted)]/60 mb-1">← 上一篇</div>
+            <div class="text-sm text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors leading-snug truncate">
+              {prev.data.title}
+            </div>
+          </a>
+        ) : (
+          <div />
+        )
+      }
+      {
+        next ? (
+          <a
+            href={getPostUrl(next)}
+            class="group p-3 rounded-lg border border-[var(--color-card-border)] bg-[var(--color-card-bg)]
+                  hover:border-[var(--color-primary)]/30 transition-colors text-right"
+          >
+            <div class="text-xs text-[var(--color-text-muted)]/60 mb-1">下一篇 →</div>
+            <div class="text-sm text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors leading-snug truncate">
+              {next.data.title}
+            </div>
+          </a>
+        ) : (
+          <div />
+        )
+      }
+    </nav>
+
+    {/* 移动端目录：浮动 FAB 按钮 + 右侧抽屉，由 TOC 组件管理 */}
+    <TOC headings={headings} />
+  </article>
+</Layout>
+
+{/* ===== 客户端代码块复制按钮 ===== */}
+<CodeCopyButton />

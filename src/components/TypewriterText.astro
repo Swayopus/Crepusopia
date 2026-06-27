@@ -1,0 +1,156 @@
+---
+// @component TypewriterText — 打字机动画组件，逐行打字/删除文本
+// @custom — typingSpeed (40), deletingSpeed (20), pauseDuration (5000): 控制动画速度
+// @custom — once (true): 为 true 时打完所有行后停在最后一行；为 false 时循环播放
+interface Props {
+  lines: string[];
+  typingSpeed?: number;
+  deletingSpeed?: number;
+  pauseDuration?: number;
+  once?: boolean;
+}
+
+const {
+  lines = [],
+  typingSpeed = 40,
+  deletingSpeed = 20,
+  pauseDuration = 5000,
+  once = true,
+} = Astro.props;
+
+// 将 lines 数组编码为 URI 组件，通过 data 属性安全传递到客户端
+const encodedLines = encodeURIComponent(JSON.stringify(lines));
+---
+
+{/* 仅当有文本行时渲染 */}
+{
+  lines.length > 0 && (
+    <span
+      id="typewriter"
+      data-lines={encodedLines}
+      data-typing-speed={typingSpeed}
+      data-deleting-speed={deletingSpeed}
+      data-pause-duration={pauseDuration}
+      data-once={once ? "1" : "0"}
+    >
+      {/* 文本容器 — 初始为空行占位 */}
+      <span id="typewriter-text">
+        &nbsp;
+        <br />
+        &nbsp;
+      </span>
+      {/* 闪烁光标 */}
+      <span
+        id="typewriter-cursor"
+        class="inline-block w-[2px] h-[1em] bg-[var(--color-primary)] ml-1 align-middle"
+        style="animation: blink 1s infinite;"
+      >
+        |
+      </span>
+    </span>
+  )
+}
+
+{/*
+  内联打字机引擎。
+  - once 模式：逐行完整打出，打完一行后移动到下一行，最后一行打完即停止。
+  - loop 模式：打出一行 → 暂停 → 删除 → 移动到下一行（轮播）。
+  - astro:after-swap 事件中重新初始化以支持 View Transitions。
+*/}
+<script is:inline>
+  var _twTimer = null;
+  function startTypewriter() {
+    var el = document.getElementById("typewriter");
+    if (!el) return;
+    var textEl = document.getElementById("typewriter-text");
+    var cursorEl = document.getElementById("typewriter-cursor");
+    if (!textEl) return;
+
+    // 清除进行中的动画
+    if (_twTimer) clearTimeout(_twTimer);
+
+    // 从 data 属性读取配置
+    var lines = JSON.parse(decodeURIComponent(el.dataset.lines || "[]"));
+    var speed = parseInt(el.dataset.typingSpeed || "40");
+    var deleteSpeed = parseInt(el.dataset.deletingSpeed || "20");
+    var pause = parseInt(el.dataset.pauseDuration || "5000");
+    var isOnce = el.dataset.once === "1";
+
+    var lineIndex = 0,
+      charIndex = 0,
+      isDeleting = false,
+      finished = false;
+    if (cursorEl) cursorEl.style.display = "inline-block";
+
+    // 从空内容开始
+    textEl.innerHTML = "";
+
+    function type() {
+      if (finished) return;
+      var currentLine = lines[lineIndex];
+
+      if (!isDeleting) {
+        // --- 打字阶段 ---
+        // 构建 HTML：已完成的行以 <br> 分隔 + 当前正在打的行
+        var html = "";
+        for (var i = 0; i < lineIndex; i++) {
+          html += lines[i] + "<br>";
+        }
+        html += currentLine.slice(0, charIndex);
+        textEl.innerHTML = html;
+        charIndex++;
+
+        if (charIndex > currentLine.length) {
+          // 当前行已打完
+          if (isOnce && lineIndex >= lines.length - 1) {
+            // 所有行已完成 — 显示最终文本，隐藏光标
+            var fullHtml = "";
+            for (var j = 0; j < lines.length; j++) {
+              fullHtml += (j > 0 ? "<br>" : "") + lines[j];
+            }
+            textEl.innerHTML = fullHtml;
+            if (cursorEl) cursorEl.style.display = "none";
+            finished = true;
+            return;
+          }
+          if (isOnce) {
+            // once 模式：移动到下一行（不删除）
+            lineIndex++;
+            charIndex = 0;
+            _twTimer = setTimeout(type, 300);
+            return;
+          }
+          // loop 模式：暂停后开始删除
+          isDeleting = true;
+          _twTimer = setTimeout(type, pause);
+          return;
+        }
+        _twTimer = setTimeout(type, speed);
+      } else {
+        // --- 删除阶段（仅 loop 模式） ---
+        var delHtml = "";
+        for (var k = 0; k < lineIndex; k++) {
+          delHtml += lines[k] + "<br>";
+        }
+        delHtml += currentLine.slice(0, charIndex);
+        textEl.innerHTML = delHtml;
+        charIndex--;
+        if (charIndex < 0) {
+          // 完全删除 — 前进到下一行
+          isDeleting = false;
+          charIndex = 0;
+          lineIndex = (lineIndex + 1) % lines.length;
+          _twTimer = setTimeout(type, 300);
+          return;
+        }
+        _twTimer = setTimeout(type, deleteSpeed);
+      }
+    }
+
+    // 初始延迟后开始打字
+    _twTimer = setTimeout(type, 500);
+  }
+
+  startTypewriter();
+  document.addEventListener("astro:after-swap", startTypewriter);
+</script>

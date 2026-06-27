@@ -1,0 +1,43 @@
+---
+// @component CategoryBar — 分类标签栏组件，显示分类筛选 pills（类似标签云），无横向滚动
+interface Props {
+  categories: { name: string; count: number }[];
+  currentCategory?: string;
+}
+const { categories = [], currentCategory } = Astro.props;
+---
+
+{/* 仅当有分类数据时渲染；当前选中分类高亮为反色样式 */}
+{
+  categories.length > 0 && (
+    <div class="flex flex-wrap gap-3 mb-8">
+      {/* "全部" 按钮 — 返回文章列表；无 currentCategory 时高亮 */}
+      <a
+        href="/posts/"
+        class="inline-flex items-center px-4 py-2.5 rounded-lg
+           bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+           hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+           transition-colors text-base leading-snug"
+        style={!currentCategory ? "background:var(--color-text);color:var(--color-bg)" : ""}
+      >
+        All
+      </a>
+      {/* 各分类按钮 — 点击跳转 /categories/{name}/ */}
+      {categories.map((c) => (
+        <a
+          href={`/categories/${c.name.toLowerCase()}/`}
+          class="inline-flex items-center px-4 py-2.5 rounded-lg
+             bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+             hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+             transition-colors text-base leading-snug"
+          style={
+            currentCategory === c.name ? "background:var(--color-text);color:var(--color-bg)" : ""
+          }
+        >
+          {c.name}
+          <span class="ml-1.5 opacity-60">{c.count}</span>
+        </a>
+      ))}
+    </div>
+  )
+}

@@ -1,0 +1,79 @@
+---
+// @page /archive — 文章归档页：按年份分组，时间线 UI 展示
+// Data sources: getSortedPosts()
+import Layout from "@layouts/Layout.astro";
+import { getSortedPosts, getPostSlug } from "@utils/index";
+
+const posts = await getSortedPosts();
+
+// 按发布年份分组：Map<年份, 文章数组>
+const byYear = new Map<number, typeof posts>();
+posts.forEach((p) => {
+  const y = p.data.published.getFullYear();
+  if (!byYear.has(y)) byYear.set(y, []);
+  byYear.get(y)!.push(p);
+});
+---
+
+<Layout title="Archive" slug="archive">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题与文章计数 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">
+      归档
+      <span
+        class="text-base text-[var(--color-text-muted)] font-normal ml-2"
+        style="font-family: var(--font-nav)">{posts.length} 篇文章</span
+      >
+    </h1>
+
+    {/* ===== 按年份倒序渲染，每年一个分组 ===== */}
+    {
+      Array.from(byYear.entries())
+        .sort(([a], [b]) => b - a)
+        .map(([year, yearPosts]) => (
+          <section class="mb-8">
+            {/* 年份标题 */}
+            <h2 class="text-2xl font-[var(--font-time)] text-[var(--color-text)] mb-4 ml-2">
+              {year}
+            </h2>
+
+            {/* 时间线：垂直连接线 + 圆点标记 */}
+            <div class="relative ml-2">
+              <div class="absolute left-[5px] top-2 bottom-0 w-px bg-[var(--color-border)]" />
+              <div class="space-y-5">
+                {yearPosts.map((p) => {
+                  const slug = getPostSlug(p);
+                  const month = p.data.published.getMonth() + 1;
+                  const day = p.data.published.getDate();
+                  return (
+                    <div class="relative pl-8">
+                      {/* 时间线圆点 */}
+                      <div class="absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2 border-[var(--color-border)] bg-[var(--color-bg)] ring-2 ring-[var(--color-bg)]" />
+                      <div class="flex items-baseline gap-4">
+                        <span class="text-base leading-snug text-[var(--color-text-muted)]/60 w-20 flex-shrink-0">
+                          {month}月{day}日
+                        </span>
+                        <a
+                          href={`/posts/${slug}/`}
+                          class="text-base text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors"
+                        >
+                          {p.data.title}
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        ))
+    }
+
+    {/* ===== 空状态：尚无文章 ===== */}
+    {
+      posts.length === 0 && (
+        <p class="text-base leading-snug text-[var(--color-text-muted)] py-10">No posts yet.</p>
+      )
+    }
+  </div>
+</Layout>

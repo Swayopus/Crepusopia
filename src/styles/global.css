@@ -1,0 +1,677 @@
+/* ============================================================
+   全局样式 — 目录
+   ============================================================
+   1. 设计令牌 ........ CSS 自定义属性 & Tailwind 主题
+   2. 深色模式 ........ .dark 下的颜色覆盖
+   3. 基础样式 ........ HTML 元素默认值、选中高亮、滚动条
+   4. 排版 ............ 标题、链接、代码、表格、正文基础样式
+   5. 正文提示块 ...... Callout 提示块（remark-directive）
+   6. 动画 ............ 关键帧、View Transitions API
+   7. 组件 ............ 高亮链接、代码复制按钮
+   8. 工具类 .......... 布局容器
+   9. 目录 ............ TOC 高亮当前标题
+   10. Shiki .......... 深色模式代码高亮
+   11. Obsidian Callouts .. Obsidian 风格提示块
+   12. 响应式排版 ...... 移动端字号缩放
+   ============================================================ */
+
+/* --- Tailwind v4 --- */
+@import "tailwindcss";
+
+/* ==========================================================================
+   1. 设计令牌
+   基于 oklch 色彩空间的 CSS 自定义属性 + Tailwind @theme 扩展。
+   ========================================================================== */
+
+:root {
+  /* 排版 — 统一正文字体，延续 Neomelt 的策略 */
+  --font-body: "LXGW WenKai GB Screen", system-ui, sans-serif;
+  --font-title: "Snell-Black", "Snell-Bold", serif; /* 装饰字体：Hero 大标题、站点名称 */
+  --font-mono: "JetBrains Mono", monospace; /* 代码块 */
+  /* 别名保留给旧组件兼容 — 全部指向 --font-body */
+  --font-heading: var(--font-body);
+  --font-nav: var(--font-body);
+  --font-time: "Snell-Bold", serif;
+
+  /* 色彩 — oklch，浅色模式（暖黄纸色调） */
+  --color-bg: oklch(0.96 0.02 90);
+  --color-bg-alt: oklch(0.93 0.025 90);
+  --color-text: oklch(0.25 0.01 106.43);
+  --color-text-muted: oklch(0.42 0.02 106.43);
+  --color-border: oklch(0.88 0.01 95);
+  --color-primary: oklch(0.55 0.18 265);
+  --color-primary-hover: oklch(0.48 0.18 265);
+  --color-highlight: oklch(0.92 0.11 175);
+  --color-highlight-text: oklch(0.35 0.1 175);
+  --color-card-bg: oklch(0.97 0.015 90);
+  --color-card-border: oklch(0.88 0.02 90);
+  --color-code-bg: oklch(0.93 0.02 90);
+
+  --navbar-height: 3.5rem;
+}
+
+@theme {
+  --font-sans: "LXGW WenKai GB Screen", system-ui, sans-serif;
+  --font-serif: "LXGW WenKai GB Screen", Georgia, serif;
+  --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+}
+
+/* ==========================================================================
+   2. 深色模式
+   当用户切换主题或系统偏好为深色时，通过 .dark 类覆盖颜色变量。
+   ========================================================================== */
+
+.dark {
+  --color-bg: oklch(0.2 0.02 255);
+  --color-bg-alt: oklch(0.24 0.025 255);
+  --color-text: oklch(0.9 0.008 255);
+  --color-text-muted: oklch(0.7 0.015 255);
+  --color-border: oklch(0.3 0.02 255);
+  --color-primary: oklch(0.68 0.18 265);
+  --color-primary-hover: oklch(0.78 0.16 265);
+  --color-highlight: oklch(0.28 0.08 175);
+  --color-highlight-text: oklch(0.7 0.1 175);
+  --color-card-bg: oklch(0.22 0.02 255);
+  --color-card-border: oklch(0.28 0.02 255);
+  --color-code-bg: oklch(0.25 0.025 255);
+}
+
+/* 深色背景下正文字重微调 — 仅作用于 .prose 内的正文，避免全局覆写 */
+.dark .prose {
+  font-weight: 400;
+}
+
+/* 深色模式提示块背景 — 保持相同的边框颜色，但使用柔和的深色背景
+   以提高可读性。 */
+.dark .prose .callout-note {
+  background: oklch(0.22 0.02 265);
+}
+.dark .prose .callout-tip {
+  background: oklch(0.22 0.02 175);
+}
+.dark .prose .callout-important {
+  background: oklch(0.22 0.02 70);
+}
+.dark .prose .callout-warning {
+  background: oklch(0.22 0.03 45);
+}
+.dark .prose .callout-caution {
+  background: oklch(0.22 0.02 20);
+}
+
+/* ==========================================================================
+   3. 基础样式
+   HTML 元素默认值、选中高亮、滚动条样式。
+   ========================================================================== */
+
+* {
+  font-synthesis: none;
+}
+
+html {
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-y: scroll;
+  /* 预留滚动条空间，防止页面切换时布局抖动 */
+  scrollbar-gutter: stable;
+  text-autospace: normal;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 选中高亮 — 使用 highlight 色值对以保证对比度 */
+::selection {
+  background-color: var(--color-highlight);
+  color: var(--color-highlight-text);
+}
+
+/* 自定义滚动条 — 细窄、低调，颜色与边框融合 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--color-text-muted);
+  }
+}
+
+/* ==========================================================================
+   4. 排版
+   标题、正文、链接、代码、表格及正文章节标题/列表样式。
+   ========================================================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-family: var(--font-title);
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+/* 正文列表样式 — .prose 容器内的无序和有序列表 */
+.prose ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+.prose ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+.prose li {
+  margin-bottom: 0.25rem;
+}
+
+.prose h2 {
+  font-size: 1.625rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+.prose h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+p {
+  margin-bottom: 0.625rem;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  background-color: var(--color-code-bg);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+}
+
+pre {
+  background-color: var(--color-code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  margin: 1.5rem 0;
+  -webkit-overflow-scrolling: touch;
+
+  /* pre 内的嵌套 code 不应有自己的背景或内边距 */
+  code {
+    background: none;
+    padding: 0;
+    white-space: pre;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+}
+
+thead {
+  border-bottom: 2px solid var(--color-border);
+}
+
+th,
+td {
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2rem 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
+   5. 正文提示块（remark-directive）
+   由 remark-directive 渲染的 :::note、:::tip、:::warning 等容器样式。
+   每种类型都有独立的边框和背景色。
+   ========================================================================== */
+
+.prose .callout {
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.75rem 1rem;
+  margin: 1.25rem 0;
+  background: var(--color-bg-alt);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.prose .callout-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-body);
+}
+.prose .callout-note {
+  border-color: oklch(0.55 0.18 265);
+  background: oklch(0.97 0.02 265);
+}
+.prose .callout-tip {
+  border-color: oklch(0.55 0.15 175);
+  background: oklch(0.97 0.02 175);
+}
+.prose .callout-important {
+  border-color: oklch(0.55 0.15 70);
+  background: oklch(0.97 0.02 70);
+}
+.prose .callout-warning {
+  border-color: oklch(0.55 0.15 45);
+  background: oklch(0.97 0.03 45);
+}
+.prose .callout-caution {
+  border-color: oklch(0.5 0.2 20);
+  background: oklch(0.97 0.02 20);
+}
+
+/* ==========================================================================
+   6. 动画
+   可复用的关键帧和 Astro View Transitions API 钩子。
+   ========================================================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 光标闪烁 — 用于打字机 / 终端风格的文本效果 */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Astro View Transitions — 默认交叉淡入淡出 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ==========================================================================
+   7. 组件
+   可复用的 UI 模式。
+   ========================================================================== */
+
+/* 图标按钮 — 统一的侧边栏/页脚图标行（社交、搜索、主题） */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  text-decoration: none;
+}
+.icon-btn:hover {
+  background: var(--color-border);
+  color: var(--color-primary);
+}
+
+/* 链接下划线动画 — hover 时下划线从左滑入 */
+.highlight-link {
+  position: relative;
+  text-decoration: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0.1em;
+    width: 100%;
+    height: 1.5px;
+    background-color: var(--color-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ==========================================================================
+   8. 文章目录
+   通过 IntersectionObserver 高亮目录中的当前活动标题。
+   ========================================================================== */
+#toc-desktop a[data-active="true"] {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* ==========================================================================
+   10. Shiki 代码高亮
+   深色模式下覆盖 Shiki 的内联样式，使语法高亮切换到
+   shikiConfig.themes.dark 定义的深色主题。
+   ========================================================================== */
+
+.dark pre.astro-code {
+  background-color: var(--shiki-dark-bg) !important;
+}
+.dark pre.astro-code span {
+  color: var(--shiki-dark) !important;
+}
+
+/* ==========================================================================
+   11. Obsidian 风格提示块（remark-obsidian-callout）
+   ========================================================================== */
+
+/* 基础结构 — 所有提示块共享 */
+.prose blockquote[data-callout],
+blockquote[data-callout] {
+  border-left: 3px solid var(--callout-color, var(--color-primary)) !important;
+  border-radius: 0 8px 8px 0;
+  background: transparent !important;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  font-style: normal !important;
+  color: var(--color-text);
+}
+
+/* 标题栏 */
+.callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--callout-color);
+  font-size: 0.9375rem;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.callout-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+}
+
+.callout-title-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 内容区域 */
+.callout-content {
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.callout-content p {
+  margin: 0;
+}
+.callout-content p + p {
+  margin-top: 0.5rem;
+}
+.callout-content ul,
+.callout-content ol {
+  padding-left: 1.5rem;
+}
+.callout-content ul {
+  list-style: disc;
+}
+.callout-content ol {
+  list-style: decimal;
+}
+
+/* 可折叠提示块 — 点击标题切换展开/收起 */
+blockquote[data-expandable="true"] > .callout-title {
+  cursor: pointer;
+  user-select: none;
+}
+blockquote[data-expandable="true"] > .callout-title > .callout-title-icon {
+  transition: transform 0.18s ease;
+}
+blockquote[data-expandable="true"][data-expanded="false"] > .callout-content {
+  display: none;
+}
+blockquote[data-expandable="true"][data-expanded="false"] > .callout-title > .callout-title-icon {
+  transform: rotate(-90deg);
+}
+
+/* 嵌套提示块 */
+blockquote[data-callout] blockquote[data-callout] {
+  margin: 0.5rem 0 0.5rem 1rem;
+}
+
+/* 当提示块以嵌套提示块结尾时，减少外层底部内边距 */
+.callout-content > blockquote[data-callout]:last-child {
+  margin-bottom: -0.25rem;
+}
+
+/* --- 各类型的专属颜色 --- */
+blockquote.callout-note {
+  --callout-color: #3b82f6;
+}
+blockquote.callout-abstract,
+blockquote.callout-summary,
+blockquote.callout-tldr {
+  --callout-color: #14b8a6;
+}
+blockquote.callout-tip,
+blockquote.callout-hint,
+blockquote.callout-important {
+  --callout-color: #10b981;
+}
+blockquote.callout-success,
+blockquote.callout-check,
+blockquote.callout-done {
+  --callout-color: #22c55e;
+}
+blockquote.callout-question,
+blockquote.callout-help,
+blockquote.callout-faq {
+  --callout-color: #f97316;
+}
+blockquote.callout-warning,
+blockquote.callout-caution,
+blockquote.callout-attention {
+  --callout-color: #f59e0b;
+}
+blockquote.callout-failure,
+blockquote.callout-fail,
+blockquote.callout-missing {
+  --callout-color: #ef4444;
+}
+blockquote.callout-danger,
+blockquote.callout-error {
+  --callout-color: #dc2626;
+}
+blockquote.callout-bug {
+  --callout-color: #ef4444;
+}
+blockquote.callout-example {
+  --callout-color: #8b5cf6;
+}
+blockquote.callout-quote,
+blockquote.callout-cite {
+  --callout-color: #6b7280;
+}
+blockquote.callout-todo {
+  --callout-color: #3b82f6;
+}
+
+/* ==========================================================================
+   12. 响应式排版
+   移动端缩小字号以提高信息密度。
+   策略：减小根字体大小（rem 基准），使所有基于 rem 的尺寸
+  （包括 Tailwind 工具类）按比例缩放，然后对最大标题进行微调
+   以保持视觉平衡。
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  /* 根 rem 基准：18px → 16px（所有 rem 值等比缩小约 11%） */
+  html {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  /* 标题 — 移动端等比缩放 */
+  h1 {
+    font-size: 1.9rem;
+    margin-bottom: 1rem;
+  }
+  .prose h2 {
+    font-size: 1.35rem;
+    margin-top: 1.8rem;
+    margin-bottom: 0.75rem;
+  }
+  .prose h3 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* 正文 — 缩小字号以适应移动端密集阅读 */
+  .prose {
+    font-size: 1rem;
+    line-height: 1.78;
+  }
+
+  /* 引用块 */
+  blockquote {
+    padding-left: 0.75rem;
+    margin: 1rem 0;
+  }
+
+  /* 代码块 — 更紧凑的内边距 */
+  pre {
+    padding: 0.75rem 0.9rem;
+    margin: 1rem 0;
+  }
+
+  /* 表格 — 紧凑模式 */
+  table {
+    font-size: 0.875rem;
+  }
+  th,
+  td {
+    padding: 0.5rem 0.6rem;
+  }
+
+  /* 提示块 */
+  .callout-title,
+  .callout-content,
+  .prose .callout {
+    font-size: 0.875rem;
+  }
+  .prose .callout {
+    padding: 0.6rem 0.8rem;
+    margin: 1rem 0;
+  }
+
+  hr {
+    margin: 1.5rem 0;
+  }
+}
+
+@media (max-width: 360px) {
+  /* 超小屏幕：进一步缩小 rem 基准 */
+  html {
+    font-size: 15px;
+  }
+  h1 {
+    font-size: 1.7rem;
+  }
+  .prose h2 {
+    font-size: 1.25rem;
+  }
+}

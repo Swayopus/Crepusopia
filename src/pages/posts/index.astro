@@ -1,0 +1,80 @@
+---
+// @page /posts — 文章列表首页（第 1 页，每页 10 篇），含分类筛选栏与分页导航
+// Data sources: getSortedPosts(), getCategories(), getReadingStats()
+import Layout from "@layouts/Layout.astro";
+import { siteConfig } from "@/config";
+import { getSortedPosts, getCategories, getReadingStats } from "@utils/index";
+import PostCard from "@components/PostCard.astro";
+import CategoryBar from "@components/CategoryBar.astro";
+
+// 获取所有已发布文章，分页：每页 10 篇，此处展示第 1 页
+const allPosts = await getSortedPosts();
+const pageSize = siteConfig.postList.postsPerPage;
+const totalPages = Math.ceil(allPosts.length / pageSize);
+const posts = allPosts.slice(0, pageSize);
+
+// 统计总字数和分类列表
+const totalWords = allPosts.reduce((s, p) => s + (p.body ? getReadingStats(p.body).words : 0), 0);
+const cats = await getCategories();
+---
+
+<Layout title="Posts" slug="posts">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题：文章数量 + 总字数 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">
+      文章
+      <span
+        class="text-base text-[var(--color-text-muted)] font-normal ml-2"
+        style="font-family: var(--font-nav)"
+        >{allPosts.length} 篇 · 共 {totalWords.toLocaleString()} 字</span
+      >
+    </h1>
+
+    {/* 分类筛选栏 */}
+    {cats.length > 0 && <CategoryBar categories={cats} />}
+
+    {/* ===== 文章列表 / 空状态 ===== */}
+    {
+      posts.length === 0 ? (
+        <p class="text-[var(--color-text-muted)] py-10">No posts yet.</p>
+      ) : (
+        <div class="flex flex-col">
+          {posts.map((p) => (
+            <PostCard post={p} layout="list" />
+          ))}
+        </div>
+      )
+    }
+
+    {/* ===== 分页导航（仅在总页数 > 1 时显示） ===== */}
+    {
+      totalPages > 1 && (
+        <nav class="flex items-center justify-center gap-2 mt-10 pt-6 border-t border-[var(--color-border)]">
+          {/* 页码按钮：当前页高亮 */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <a
+              href={p === 1 ? "/posts/" : `/posts/page/${p}/`}
+              class="px-3 py-1.5 rounded-lg text-base leading-snug transition-colors
+                    bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                    hover:text-[var(--color-text)] hover:bg-[var(--color-border)]"
+              style={p === 1 ? "background:var(--color-text);color:var(--color-bg)" : ""}
+            >
+              {p}
+            </a>
+          ))}
+          {/* 下一页按钮 */}
+          {totalPages > 1 && (
+            <a
+              href="/posts/page/2/"
+              class="px-3 py-1.5 rounded-lg text-base leading-snug transition-colors
+                    bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                    hover:text-[var(--color-text)] hover:bg-[var(--color-border)]"
+            >
+              下一页 →
+            </a>
+          )}
+        </nav>
+      )
+    }
+  </div>
+</Layout>

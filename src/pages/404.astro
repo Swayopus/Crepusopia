@@ -1,0 +1,24 @@
+---
+// @page /404 — 自定义 404 页面，提供返回首页的链接
+// Data sources: 无（纯静态页面）
+import Layout from "@layouts/Layout.astro";
+---
+
+<Layout title="404 · Not Found">
+  {/* ===== 404 错误提示区域 ===== */}
+  <div class="max-w-[52rem] mx-auto py-20 text-center">
+    <h1 class="text-6xl font-[var(--font-title)] text-[var(--color-text)] mb-4">404</h1>
+    <p class="text-xl text-[var(--color-text-muted)] mb-8 leading-snug">Page not found</p>
+    {/* 返回首页按钮 */}
+    <a
+      href="/"
+      class="inline-flex items-center px-4 py-2 rounded-lg
+             border border-[var(--color-border)] bg-[var(--color-bg-alt)]
+             text-[var(--color-text)] text-base leading-snug
+             hover:border-[var(--color-primary)]/40 hover:text-[var(--color-primary)]
+             transition-colors"
+    >
+      ← Back Home
+    </a>
+  </div>
+</Layout>

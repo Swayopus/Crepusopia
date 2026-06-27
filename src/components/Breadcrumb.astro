@@ -1,0 +1,32 @@
+---
+// @component Breadcrumb — 面包屑导航组件，根据 { label, href? } 数组渲染路径导航
+interface Props {
+  items: { label: string; href?: string }[];
+}
+const { items = [] } = Astro.props;
+---
+
+{/* 遍历 items 并用 "/" 分隔每一项；最后一项为纯文本（无链接） */}
+<nav
+  aria-label="Breadcrumb"
+  class="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]/60 mb-6 font-[var(--font-nav)]"
+>
+  {
+    items.map((item, i) => (
+      <>
+        {i > 0 && (
+          <span aria-hidden="true" class="text-[var(--color-text-muted)]/30">
+            /
+          </span>
+        )}
+        {item.href ? (
+          <a href={item.href} class="hover:text-[var(--color-primary)] transition-colors">
+            {item.label}
+          </a>
+        ) : (
+          <span class="text-[var(--color-text-muted)]">{item.label}</span>
+        )}
+      </>
+    ))
+  }
+</nav>

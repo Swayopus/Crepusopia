@@ -1,0 +1,98 @@
+---
+// @page /posts/page/:page — 文章列表分页（第 2 页起），每页 10 篇，含分类筛选栏与分页导航
+// Data sources: getCollection("posts"), getReadingStats(), getCategories()
+import { getCollection } from "astro:content";
+import { siteConfig } from "@/config";
+import Layout from "@layouts/Layout.astro";
+import { getReadingStats, getCategories } from "@utils/index";
+import PostCard from "@components/PostCard.astro";
+import CategoryBar from "@components/CategoryBar.astro";
+
+/**
+ * 使用 Astro 内置 paginate() 为所有非草稿/非隐藏文章生成分页路径。
+ */
+export async function getStaticPaths({ paginate }: { paginate: (data: unknown[], opts: { pageSize: number }) => unknown }) {
+  const allPosts = await getCollection("posts", (p) => !p.data.draft && !p.data.hidden);
+  const sorted = allPosts.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+  return paginate(sorted, { pageSize: siteConfig.postList.postsPerPage });
+}
+
+const { page } = Astro.props;
+const posts = page.data;
+
+// 获取全部文章用于总字数统计
+const allPosts = await getCollection("posts", (p) => !p.data.draft && !p.data.hidden);
+const totalWords = allPosts.reduce((s, p) => s + (p.body ? getReadingStats(p.body).words : 0), 0);
+
+// 获取分类列表
+const cats = await getCategories();
+---
+
+<Layout title={`Posts · Page ${page.currentPage}`} slug={`posts/page/${page.currentPage}`}>
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题：当前页码 / 总页数 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">
+      文章
+      <span
+        class="text-base text-[var(--color-text-muted)] font-normal ml-2"
+        style="font-family: var(--font-nav)">第 {page.currentPage} 页 · 共 {page.lastPage} 页</span
+      >
+    </h1>
+
+    {/* 分类筛选栏 */}
+    {cats.length > 0 && <CategoryBar categories={cats} />}
+
+    {/* ===== 文章列表 ===== */}
+    <div class="flex flex-col">
+      {posts.map((p) => <PostCard post={p} layout="list" />)}
+    </div>
+
+    {/* ===== 分页导航 ===== */}
+    <nav
+      class="flex items-center justify-center gap-2 mt-10 pt-6 border-t border-[var(--color-border)]"
+    >
+      {/* 上一页按钮 */}
+      {
+        page.currentPage > 1 && (
+          <a
+            href={page.currentPage === 2 ? "/posts/" : `/posts/page/${page.currentPage - 1}/`}
+            class="px-3 py-1.5 rounded-lg text-base leading-snug transition-colors
+                  bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                  hover:text-[var(--color-text)] hover:bg-[var(--color-border)]"
+          >
+            ← 上一页
+          </a>
+        )
+      }
+      {/* 页码按钮：当前页高亮 */}
+      {
+        Array.from({ length: page.lastPage }, (_, i) => i + 1).map((p) => (
+          <a
+            href={p === 1 ? "/posts/" : `/posts/page/${p}/`}
+            class="px-3 py-1.5 rounded-lg text-base leading-snug transition-colors
+                  bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                  hover:text-[var(--color-text)] hover:bg-[var(--color-border)]"
+            style={
+              p === page.currentPage ? "background:var(--color-text);color:var(--color-bg)" : ""
+            }
+          >
+            {p}
+          </a>
+        ))
+      }
+      {/* 下一页按钮 */}
+      {
+        page.currentPage < page.lastPage && (
+          <a
+            href={`/posts/page/${page.currentPage + 1}/`}
+            class="px-3 py-1.5 rounded-lg text-base leading-snug transition-colors
+                  bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                  hover:text-[var(--color-text)] hover:bg-[var(--color-border)]"
+          >
+            下一页 →
+          </a>
+        )
+      }
+    </nav>
+  </div>
+</Layout>

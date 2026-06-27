@@ -1,0 +1,123 @@
+---
+// @component Hitokoto — 一言组件，每日从 hitokoto.cn 获取一句话，按天缓存在 localStorage 中；API 不可用时回退到内置名言
+// @custom — FALLBACKS 数组：编辑以添加/删除 API 不可用时的备用名言
+---
+
+{/* 占位 DOM — 由下方内联脚本动态填充 */}
+<div
+  class="hitokoto-block border-l-[3px] border-[var(--color-primary)] pl-4 py-1 mb-3"
+  data-ready="false"
+>
+  <p class="hitokoto-text text-base text-[var(--color-text)]/80 leading-relaxed italic">
+    "Loading..."
+  </p>
+  <footer class="hitokoto-footer text-sm text-[var(--color-text-muted)] mt-1">—— ...</footer>
+</div>
+
+<script>
+  (function () {
+    const STORAGE_KEY = "hitokoto_cache";
+    const API = "https://v1.hitokoto.cn/";
+
+    // @custom — API 不可达时使用的备用名言列表
+    const FALLBACKS = [
+      {
+        text: "The best time to plant a tree was 20 years ago. The second best time is now.",
+        from: "Chinese Proverb",
+      },
+      { text: "Simplicity is the ultimate sophistication.", from: "Leonardo da Vinci" },
+      { text: "Stay hungry, stay foolish.", from: "Steve Jobs" },
+      { text: "Talk is cheap. Show me the code.", from: "Linus Torvalds" },
+      { text: "First, solve the problem. Then, write the code.", from: "John Johnson" },
+    ];
+
+    /** 返回今天的日期字符串 "YYYY-MM-DD"，用于按天缓存 */
+    function todayStr() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    /** 从 localStorage 读取缓存的名言；无效或缺失时返回 null */
+    function getCache() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || !data.date || !data.text) return null;
+        return data;
+      } catch {
+        return null;
+      }
+    }
+
+    /** 将名言写入 localStorage，以今天日期为键 */
+    function setCache(text, from, fromWho) {
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ date: todayStr(), text, from, fromWho }),
+        );
+      } catch {}
+    }
+
+    /** 更新 DOM 显示名言文本和出处 */
+    function render(text, from, fromWho) {
+      const b = document.querySelector(".hitokoto-block");
+      if (!b) return;
+      const t = b.querySelector(".hitokoto-text");
+      const f = b.querySelector(".hitokoto-footer");
+      if (t) t.textContent = '"' + text + '"';
+      let attr = from || "";
+      if (fromWho) attr += "(" + fromWho + ")";
+      if (f) f.textContent = "—— " + attr;
+      b.setAttribute("data-ready", "true");
+    }
+
+    /** 随机选取一条备用名言并渲染 */
+    function pickFallback() {
+      const f = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+      render(f.text, f.from, "");
+    }
+
+    /** 从 hitokoto.cn 获取新名言；失败时回退到本地备用名言 */
+    async function fetchHitokoto() {
+      const url =
+        API +
+        "?" +
+        new URLSearchParams({
+          encode: "json",
+          charset: "utf-8",
+        }).toString();
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        const json = await resp.json();
+        const text = json.hitokoto;
+        const from = json.from || "未知";
+        const fromWho = json.from_who || "";
+        setCache(text, from, fromWho);
+        render(text, from, fromWho);
+      } catch {
+        pickFallback();
+      }
+    }
+
+    /**
+     * 初始化一言小组件。
+     * 如果有今日缓存则直接使用，否则从 API 获取新名言。
+     * 在 astro:page-load 事件中重新执行以支持 View Transitions。
+     */
+    function init() {
+      const b = document.querySelector(".hitokoto-block");
+      if (!b || b.dataset.ready === "true") return;
+      const cache = getCache();
+      if (cache && cache.date === todayStr()) {
+        render(cache.text, cache.from || "", cache.fromWho || "");
+        return;
+      }
+      fetchHitokoto();
+    }
+
+    init();
+    document.addEventListener("astro:page-load", init);
+  })();
+</script>

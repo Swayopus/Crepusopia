@@ -1,0 +1,391 @@
+---
+// @component SearchModal — 搜索模态框组件，使用 Pagefind JS API 实现全文搜索，带自定义 UI
+---
+
+{/* 搜索模态框 — 默认隐藏，通过 #search-toggle 按钮或 Ctrl+K 打开 */}
+<div id="search-modal" class="search-overlay" aria-hidden="true">
+  <div class="search-box" role="dialog" aria-modal="true" aria-label="Search">
+    {/* 头部：标题 + 关闭按钮 */}
+    <div class="search-header">
+      <span class="search-title">搜索</span>
+      <button id="search-close" class="search-close-btn" aria-label="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    {/* 主体：搜索输入框 + 结果列表 */}
+    <div class="search-body">
+      <div class="search-input-wrap">
+        <svg
+          class="search-input-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="搜索文章…"
+          autocomplete="off"
+          enterkeyhint="search"
+        />
+        {/* 清除按钮 — 输入内容后显示 */}
+        <button id="search-clear" class="search-clear-btn" aria-label="Clear" type="button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      {/* 搜索结果容器 — 由下方脚本动态填充 */}
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+</div>
+
+{/* 搜索逻辑脚本 — Pagefind 动态导入 + 事件绑定 */}
+<script>
+  var pagefind = null;
+  var loading = false;
+
+  /** 将搜索模态框的水平内边距与 <main> 对齐，实现视觉居中 */
+  function alignToMain() {
+    const modal = document.getElementById("search-modal");
+    const main = document.querySelector("main.min-w-0");
+    if (!modal || !main) return;
+    const rect = main.getBoundingClientRect();
+    const minPad = 16;
+    const left = Math.max(rect.left, minPad);
+    const right = Math.max(window.innerWidth - rect.right, minPad);
+    modal.style.paddingLeft = left + "px";
+    modal.style.paddingRight = right + "px";
+  }
+
+  /** 打开搜索模态框 */
+  function openModal() {
+    const modal = document.getElementById("search-modal");
+    if (!modal) return;
+    alignToMain();
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    setTimeout(function () { var el = document.getElementById("search-input"); if (el) el.focus(); }, 100);
+  }
+
+  /** 关闭搜索模态框 */
+  function closeModal() {
+    const modal = document.getElementById("search-modal");
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    modal.style.paddingLeft = "";
+    modal.style.paddingRight = "";
+  }
+
+  /** 执行 Pagefind 搜索并渲染结果 */
+  async function doSearch(query: string) {
+    const results = document.getElementById("search-results");
+    if (!results) return;
+
+    // 空查询：清空结果
+    if (!query.trim()) {
+      results.innerHTML = "";
+      return;
+    }
+
+    // 首次搜索：动态加载 Pagefind 模块
+    if (!pagefind) {
+      results.innerHTML = '<p class="search-hint">加载搜索索引中…</p>';
+      try {
+        pagefind = await import("/pagefind/pagefind.js");
+      } catch {
+        results.innerHTML =
+          '<p class="search-hint">搜索不可用。请先运行 <code>npm run build</code> 构建索引。</p>';
+        return;
+      }
+    }
+
+    // 防止重复搜索
+    if (loading) return;
+    loading = true;
+    results.innerHTML = '<p class="search-hint">搜索中…</p>';
+
+    try {
+      const search = await pagefind.search(query, { excerptLength: 25 });
+      if (!search || search.results.length === 0) {
+        results.innerHTML = '<p class="search-hint">未找到相关文章</p>';
+        loading = false;
+        return;
+      }
+      const count = search.results.length;
+      let html = `<p class="search-count">${count} 条结果</p>`;
+      for (const r of search.results) {
+        const data = await r.data();
+        html += `
+          <a href="${data.url}" class="search-result-item">
+            <div class="search-result-title">${data.meta?.title || data.url}</div>
+            ${data.excerpt ? `<div class="search-result-excerpt">${data.excerpt}</div>` : ""}
+          </a>`;
+      }
+      results.innerHTML = html;
+      // 点击结果后关闭模态框
+      results.querySelectorAll(".search-result-item").forEach((el) => {
+        el.addEventListener("click", closeModal);
+      });
+    } catch {
+      results.innerHTML = '<p class="search-hint">搜索出错，请重试。</p>';
+    }
+    loading = false;
+  }
+
+  // --- 事件绑定 ---
+  // 使用 .on* 属性赋值防止 View Transition 导航后重复绑定
+  function bind() {
+    const modal = document.getElementById("search-modal");
+    const closeBtn = document.getElementById("search-close");
+    var input = document.getElementById("search-input");
+    const clearBtn = document.getElementById("search-clear");
+    if (!modal || !closeBtn || !input || !clearBtn) return;
+
+    // 关闭按钮
+    closeBtn.onclick = closeModal;
+    // 点击遮罩层关闭
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+    // 清除按钮
+    clearBtn.onclick = () => {
+      input.value = "";
+      input.focus();
+      doSearch("");
+    };
+
+    // 输入防抖搜索（200ms）
+    var timer;
+    input.oninput = () => {
+      clearBtn.classList.toggle("visible", input.value.length > 0);
+      clearTimeout(timer);
+      timer = setTimeout(() => doSearch(input.value.trim()), 200);
+    };
+
+    // 键盘快捷键：Esc 关闭，Ctrl+K 切换
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        modal.classList.contains("open") ? closeModal() : openModal();
+      }
+    });
+  }
+
+  // 点击 #search-toggle 按钮打开搜索
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#search-toggle")) openModal();
+  });
+  document.addEventListener("DOMContentLoaded", bind);
+  document.addEventListener("astro:page-load", bind);
+</script>
+
+<style is:global>
+  /* --- 遮罩层 --- */
+  .search-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.5);
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 8vh;
+    /* padding-left / padding-right 由 JS 动态设置以对齐 <main> */
+  }
+  .search-overlay.open {
+    display: flex;
+  }
+
+  /* --- 搜索框容器 --- */
+  .search-box {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+  }
+
+  /* --- 头部 --- */
+  .search-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .search-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .search-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .search-close-btn:hover {
+    color: var(--color-text);
+    background: var(--color-bg-alt);
+  }
+
+  /* --- 主体 --- */
+  .search-body {
+    padding: 0.75rem 1rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  /* --- 输入框区域 --- */
+  .search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .search-input-icon {
+    position: absolute;
+    left: 0.65rem;
+    color: var(--color-text-muted);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  .search-input {
+    width: 100%;
+    padding: 0.4rem 2rem 0.4rem 2rem;
+    border: 1px solid var(--color-card-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-family: var(--font-nav);
+    outline: none;
+    line-height: 1.4;
+  }
+  .search-input:focus {
+    border-color: var(--color-primary);
+  }
+  .search-input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.5;
+  }
+
+  /* --- 清除按钮 --- */
+  .search-clear-btn {
+    position: absolute;
+    right: 0.5rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .search-clear-btn.visible {
+    display: flex;
+  }
+  .search-clear-btn:hover {
+    background: var(--color-text-muted);
+    color: var(--color-bg);
+  }
+
+  /* --- 搜索结果 --- */
+  .search-results {
+    min-height: 0;
+  }
+  .search-hint {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    padding: 1.5rem 0;
+  }
+  .search-hint code {
+    background: var(--color-bg-alt);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+  }
+  .search-count {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.35rem;
+  }
+
+  /* --- 搜索结果项 --- */
+  .search-result-item {
+    display: block;
+    padding: 0.5rem;
+    margin: 0 -0.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: background 0.15s;
+  }
+  .search-result-item:hover {
+    background: var(--color-bg-alt);
+  }
+  .search-result-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.1rem;
+  }
+  .search-result-excerpt {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.45;
+  }
+  .search-result-excerpt mark {
+    background: var(--color-primary);
+    color: var(--color-bg);
+    padding: 0.1em 0.2em;
+    border-radius: 0.15em;
+  }
+</style>

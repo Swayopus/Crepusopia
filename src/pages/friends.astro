@@ -1,0 +1,245 @@
+---
+// @page /friends — 友链页面：友链卡片展示、本站信息复制、邮件/GitHub 申请入口
+// Data sources: siteConfig (站点配置), friends (src/data/friends.ts)
+import Layout from "@layouts/Layout.astro";
+import { siteConfig } from "@/config";
+import { friends } from "@data/friends";
+
+// 构建本站信息对象，用于"交换友链"区域展示
+const myInfo = {
+  name: siteConfig.title,
+  desc: siteConfig.description,
+  link: siteConfig.siteUrl,
+  avatar: `${siteConfig.siteUrl}images/avatar.svg`,
+  rss: `${siteConfig.siteUrl}rss.xml`,
+};
+
+// 复制面板中逐行展示的键值对
+const myInfoItems = [
+  { label: "Name", value: myInfo.name },
+  { label: "Desc", value: myInfo.desc },
+  { label: "Link", value: myInfo.link },
+  { label: "Avatar", value: myInfo.avatar },
+  { label: "RSS", value: myInfo.rss },
+];
+
+// 预先拼接文本，供"一键复制全部"按钮使用
+const myInfoText = myInfoItems.map((i) => `${i.label}: ${i.value}`).join("\n");
+---
+
+<Layout title="Friends" slug="friends">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题与说明 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">友链</h1>
+    <p class="text-base text-[var(--color-text-muted)] leading-snug mb-8 max-w-lg">
+      这里是一些我经常访问的朋友和他们的博客。欢迎交换友链！
+    </p>
+
+    {/* ===== 友链卡片网格 ===== */}
+    {
+      friends.length > 0 ? (
+        <div class="grid gap-3 sm:grid-cols-2 mb-10">
+          {friends.map((f) => (
+            <a
+              href={f.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-4 p-4 rounded-xl border border-[var(--color-card-border)]
+                   bg-[var(--color-card-bg)] hover:border-[var(--color-primary)]/30 hover:shadow-sm
+                   transition-all duration-300 group"
+            >
+              <img
+                src={f.avatar}
+                alt={f.name}
+                class="w-12 h-12 rounded-xl object-cover flex-shrink-0
+                     border border-[var(--color-border)] group-hover:border-[var(--color-primary)]/30
+                     transition-all duration-300"
+                loading="lazy"
+                width="48"
+                height="48"
+              />
+              <div class="min-w-0 flex-1">
+                <div class="text-base font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors leading-snug">
+                  {f.name}
+                </div>
+                {f.desc && (
+                  <div class="text-base text-[var(--color-text-muted)] truncate leading-snug mt-0.5">
+                    {f.desc}
+                  </div>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        /* 空状态：尚无友链 */
+        <div class="py-16 text-center mb-10">
+          <p class="text-base text-[var(--color-text-muted)] leading-snug">
+            暂无友链，欢迎交换友链。
+          </p>
+        </div>
+      )
+    }
+
+    {/* ===== 申请交换区域：本站信息 + 复制按钮 + 申请入口 ===== */}
+    <div class="border border-[var(--color-card-border)] rounded-xl p-4 bg-[var(--color-card-bg)]">
+      <h2 class="text-lg font-semibold text-[var(--color-text)] mb-1 leading-snug">申请友链</h2>
+      <p class="text-sm text-[var(--color-text-muted)] leading-snug mb-3">
+        可以通过邮件、GitHub Issue
+        提交申请。申请时请提供：网站名称、地址（https://）、简介、头像（可选）。
+      </p>
+
+      {/* 本站友链信息卡 + 一键复制 */}
+      <div
+        class="mb-3 p-3 rounded-xl border border-[var(--color-primary)]/20
+                  bg-[var(--color-card-bg)]"
+      >
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <h3 class="text-lg font-semibold text-[var(--color-text)] leading-snug">本站友链信息</h3>
+          <button
+            type="button"
+            class="copy-all-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                   bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                   hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                   text-base leading-snug"
+            data-copy={myInfoText}
+          >
+            <span class="copy-label">Copy All</span>
+          </button>
+        </div>
+        <p class="text-base text-[var(--color-text-muted)]/60 leading-snug mb-2">
+          点击 Copy All 一键复制，或逐行点击 Copy 单条复制。
+        </p>
+        {/* 逐行复制按钮 */}
+        <div class="grid gap-1">
+          {
+            myInfoItems.map((item) => (
+              <button
+                type="button"
+                class="copy-row w-full grid items-center gap-2 py-1.5 px-3
+                     rounded-lg bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                     hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                     text-left"
+                style="grid-template-columns: 64px 1fr auto"
+                data-copy={`${item.label}: ${item.value}`}
+              >
+                <span class="text-base text-[var(--color-text-muted)]/60 leading-snug">
+                  {item.label}
+                </span>
+                <span class="text-base text-[var(--color-text)] truncate leading-snug">
+                  {item.value}
+                </span>
+                <span
+                  class="copy-pill text-base leading-snug px-1.5 py-0.5 rounded
+                           bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                           flex-shrink-0"
+                >
+                  Copy
+                </span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      {/* 申请方式按钮：邮件 / GitHub Issue */}
+      <div class="flex flex-wrap gap-2 mb-3">
+        <a
+          href="mailto:swayopus@swayopus.space"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 transition-colors text-base leading-snug"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+            ><rect x="2" y="4" width="20" height="16" rx="2"></rect><path
+              d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg
+          >
+          邮件申请
+        </a>
+        <a
+          href={`${siteConfig.social.github}/issues`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 transition-colors text-base leading-snug"
+        >
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"
+            ><path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"
+            ></path></svg
+          >
+          GitHub Issue
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+{/* ===== 客户端剪贴板逻辑 ===== */}
+<script>
+  /**
+   * 将文本复制到系统剪贴板。
+   * 优先使用 Clipboard API，不支持时回退到 execCommand("copy")。
+   */
+  function copyText(text) {
+    if (!text) return false;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        return navigator.clipboard.writeText(text).then(() => true);
+      }
+    } catch {}
+    // 兼容旧浏览器：使用 textarea + execCommand
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    return true;
+  }
+
+  /**
+   * 为所有 .copy-row 和 .copy-all-btn 元素绑定点击事件。
+   * 使用 data-bound 属性防止 SPA 导航时重复绑定。
+   */
+  function bindCopy() {
+    document.querySelectorAll(".copy-row, .copy-all-btn").forEach((btn) => {
+      if (btn.dataset.bound === "1") return;
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", async () => {
+        const ok = await copyText(btn.dataset.copy || "");
+        if (!ok) return;
+        // 复制成功后临时切换按钮文字为 "Copied" 作为反馈
+        const pill = btn.querySelector(".copy-pill");
+        const label = btn.querySelector(".copy-label");
+        if (pill) {
+          pill.textContent = "Copied";
+          setTimeout(() => {
+            pill.textContent = "Copy";
+          }, 1500);
+        }
+        if (label) {
+          label.textContent = "Copied";
+          setTimeout(() => {
+            label.textContent = "Copy All";
+          }, 1500);
+        }
+      });
+    });
+  }
+
+  // DOM 就绪后绑定，同时兼容 Astro SPA 视图切换
+  document.addEventListener("DOMContentLoaded", bindCopy);
+  document.addEventListener("astro:page-load", bindCopy);
+</script>

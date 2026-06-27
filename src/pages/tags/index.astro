@@ -1,0 +1,233 @@
+---
+// @page /tags — 标签云页面：标签筛选、View Transitions 动画、从 URL 参数 ?tag= 自动过滤
+// Data sources: getTags(), getSortedPosts()
+import Layout from "@layouts/Layout.astro";
+import { getTags, getSortedPosts } from "@utils/content";
+import { getReadingStats } from "@utils/reading-time";
+
+// 获取所有标签及文章数据
+const tags = await getTags();
+const allPosts = await getSortedPosts();
+---
+
+<Layout title="Tags" slug="tags">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">
+      标签
+      <span
+        class="text-base text-[var(--color-text-muted)] font-normal ml-2"
+        style="font-family: var(--font-nav)">{tags.length} 个标签</span
+      >
+    </h1>
+
+    {/* ===== 标签云 ===== */}
+    <div class="flex flex-wrap gap-3 mb-8" id="tag-cloud">
+      {
+        tags.map((tag) => (
+          <a
+            data-tag={tag.name}
+            class="tag-pill inline-flex items-center px-4 py-2.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 text-base leading-snug cursor-pointer"
+            style="transition:background-color 0.2s ease"
+          >
+            {tag.name}
+            <span class="ml-1.5 opacity-60">{tag.count}</span>
+          </a>
+        ))
+      }
+    </div>
+
+    {/* ===== 标签筛选结果区域（默认隐藏） ===== */}
+    <div id="tag-results" class="hidden">
+      <div class="flex items-center gap-3 mb-6">
+        {/* 返回按钮 */}
+        <a
+          id="tag-back"
+          class="inline-flex items-center px-4 py-2.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 text-base leading-snug cursor-pointer"
+        >
+          ← All Tags
+        </a>
+        {/* 筛选结果计数 */}
+        <span class="text-base leading-snug text-[var(--color-text-muted)]" id="tag-result-count"
+        ></span>
+      </div>
+      {/* 筛选后的文章列表容器 */}
+      <div class="flex flex-col" id="tag-posts"></div>
+    </div>
+  </div>
+</Layout>
+
+{/* ===== 客户端标签筛选与 View Transitions 动画 ===== */}
+<script
+  define:vars={{
+    postsDataJson: JSON.stringify(
+      allPosts.map((p) => ({
+        slug: p.id.replace(/^posts\//, "").replace(/\.(md|mdx)$/, ""),
+        title: p.data.title,
+        description: p.data.description || "",
+        published: p.data.published.toISOString(),
+        category: p.data.category || "",
+        tags: p.data.tags,
+        words: p.body ? getReadingStats(p.body).words : 0,
+      })),
+    ),
+  }}
+>
+  // 文章数据（由服务端注入）
+  var postsData = JSON.parse(postsDataJson);
+
+  /**
+   * 根据筛选后的文章数组构建 HTML 字符串。
+   * @param {Array} filtered - 筛选后的文章列表
+   * @returns {string} HTML 字符串
+   */
+  function buildPostsHTML(filtered) {
+    return filtered
+      .map(function (p) {
+        var date = new Date(p.published);
+        var dateStr =
+          date.getFullYear() +
+          "/" +
+          String(date.getMonth() + 1).padStart(2, "0") +
+          "/" +
+          String(date.getDate()).padStart(2, "0");
+        return (
+          '<a href="/posts/' +
+          p.slug +
+          '/" class="group block py-5 px-4 -mx-4 rounded-lg hover:bg-[var(--color-bg-alt)]/50 transition-colors duration-200"><article><h2 class="text-xl font-semibold text-[var(--color-text)] mt-0 mb-1.5 group-hover:text-[var(--color-primary)] transition-colors leading-tight">' +
+          p.title +
+          '</h2><div class="flex flex-wrap items-center gap-x-2 text-base text-[var(--color-text-muted)] mb-1.5 font-[var(--font-nav)] font-bold leading-tight"><time datetime="' +
+          p.published +
+          '">' +
+          dateStr +
+          "</time>" +
+          (p.category ? '<span aria-hidden="true">·</span><span>' + p.category + "</span>" : "") +
+          "</div>" +
+          (p.description
+            ? '<p class="text-base text-[var(--color-text-muted)] leading-snug">' +
+              p.description +
+              "</p>"
+            : "") +
+          '<div class="flex flex-wrap gap-1.5 mt-1">' +
+          p.tags
+            .map(function (t) {
+              return (
+                '<span class="px-2 py-0.5 text-xs leading-snug rounded-md bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]">' +
+                t +
+                "</span>"
+              );
+            })
+            .join("") +
+          "</div></article></a>"
+        );
+      })
+      .join("");
+  }
+
+  /**
+   * 页面加载时从 URL 查询参数 ?tag=xxx 读取标签名并自动触发筛选。
+   * 用于从文章详情页标签链接跳转过来时自动展示对应文章列表。
+   */
+  function initFromURL() {
+    var params = new URLSearchParams(window.location.search);
+    var tag = params.get("tag");
+    if (tag) showTag(tag);
+  }
+  document.addEventListener("DOMContentLoaded", initFromURL);
+  document.addEventListener("astro:page-load", initFromURL);
+
+  /**
+   * 展示指定标签下的文章列表，支持 View Transitions 动画。
+   * @param {string} tagName - 标签名称
+   */
+  function showTag(tagName) {
+    var results = document.getElementById("tag-results");
+    var countEl = document.getElementById("tag-result-count");
+    if (!results || !countEl) return;
+
+    // 高亮当前选中的标签 pill
+    document.querySelectorAll(".tag-pill").forEach(function (b) {
+      b.style.background = "";
+      b.style.color = "";
+    });
+    document.querySelectorAll(".tag-pill").forEach(function (b) {
+      if (b.dataset.tag.toLowerCase() === tagName.toLowerCase()) {
+        b.style.background = "var(--color-text)";
+        b.style.color = "var(--color-bg)";
+      }
+    });
+
+    // 筛选匹配标签的文章
+    var filtered = postsData.filter(function (p) {
+      return p.tags.some(function (t) {
+        return t.toLowerCase() === tagName.toLowerCase();
+      });
+    });
+
+    // 统计筛选结果字数
+    var totalWords = filtered.reduce(function (s, p) {
+      return s + (p.words || 0);
+    }, 0);
+
+    // 更新 DOM（支持 View Transitions 动画）
+    var doUpdate = function () {
+      countEl.textContent = filtered.length + " 篇 · 共 " + totalWords.toLocaleString() + " 字";
+      document.getElementById("tag-posts").innerHTML = buildPostsHTML(filtered);
+      results.classList.remove("hidden");
+    };
+    if (document.startViewTransition) {
+      document.startViewTransition(function () {
+        doUpdate();
+      });
+    } else {
+      doUpdate();
+    }
+  }
+
+  /**
+   * 重置标签筛选，回到标签云视图。
+   */
+  function resetTags() {
+    var results = document.getElementById("tag-results");
+    if (!results) return;
+    var doHide = function () {
+      results.classList.add("hidden");
+      // 清除所有标签 pill 的高亮
+      document.querySelectorAll(".tag-pill").forEach(function (b) {
+        b.style.background = "";
+        b.style.color = "";
+      });
+    };
+    if (document.startViewTransition) {
+      document.startViewTransition(function () {
+        doHide();
+      });
+    } else {
+      doHide();
+    }
+  }
+
+  // 全局点击代理：标签 pill 点击 → 筛选；返回按钮点击 → 重置
+  document.addEventListener("click", function (e) {
+    var pill = e.target.closest(".tag-pill");
+    if (pill) {
+      // 点击时即时高亮当前 pill
+      document.querySelectorAll(".tag-pill").forEach(function (b) {
+        b.style.background = "";
+        b.style.color = "";
+      });
+      pill.style.background = "var(--color-text)";
+      pill.style.color = "var(--color-bg)";
+      showTag(pill.dataset.tag);
+    }
+    if (e.target.closest("#tag-back")) {
+      resetTags();
+    }
+  });
+</script>

@@ -1,0 +1,7 @@
+site: dist
+glob: "**/*.html"
+output-path: pagefind
+exclude-selectors:
+  - "nav"
+  - "footer"
+  - ".no-search"

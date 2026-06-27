@@ -1,0 +1,54 @@
+---
+// @component Navbar — 导航栏组件（左侧边栏），带 SVG 图标和活跃状态高亮
+import { siteConfig } from "@/config";
+import Icon from "@components/Icon.astro";
+
+const path = Astro.url.pathname;
+const isHome = path === "/" || path === "";
+const isPosts = path.startsWith("/posts");
+
+/** 导航链接 → 图标名 映射 */
+const NAV_ICONS: Record<string, string> = {
+  "/": "home",
+  "/posts/": "posts",
+  "/archive/": "archive",
+  "/tags/": "tags",
+  "/status/": "status",
+  "/friends/": "friends",
+  "/about/": "about",
+};
+
+/** 判断导航项是否处于活跃状态 */
+function isActive(item: { href: string }) {
+  if (item.href === "/" && isHome) return true;
+  if (item.href === "/posts/" && isPosts) return true;
+  if (item.href !== "/" && item.href !== "/posts/" && path.startsWith(item.href)) return true;
+  return false;
+}
+
+/** 根据活跃状态返回 CSS 类名 */
+function linkCls(active: boolean) {
+  return active
+    ? "text-[var(--color-primary)] font-bold after:scale-x-100 tracking-[0.02em] scale-105 origin-left"
+    : "text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:font-bold hover:tracking-[0.02em] hover:scale-105 hover:origin-left after:scale-x-0 hover:after:scale-x-100";
+}
+---
+
+<nav aria-label="Site Navigation" class="mt-12 mb-6 text-lg font-semibold leading-[2.45em] font-[var(--font-nav)] lg:text-xl">
+  <ul>
+    {siteConfig.nav.map((item) => {
+      const icon = NAV_ICONS[item.href] || "about";
+      const active = isActive(item);
+      return (
+        <li>
+          <a href={item.href} class={`highlight-link transition-[colors,font-weight] inline-flex items-center gap-2 ${linkCls(active)}`}>
+            <span class="inline-flex items-center w-5 h-5 flex-shrink-0">
+              <Icon name={icon} size={20} />
+            </span>
+            {item.label}
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</nav>

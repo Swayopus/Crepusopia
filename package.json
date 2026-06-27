@@ -1,0 +1,33 @@
+{
+  "name": "crepusopia",
+  "type": "module",
+  "version": "0.0.1",
+  "//scripts": "项目脚本命令说明",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "npm run build && npm run dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "new-post": "tsx scripts/new-post.ts"
+  },
+  "//dependencies": "运行时依赖 — Astro 框架、MDX、RSS、站点地图、KaTeX 数学渲染、remark 插件、图片处理",
+  "dependencies": {
+    "@astrojs/mdx": "^0.12.2",
+    "@astrojs/rss": "^4.0.13",
+    "@astrojs/sitemap": "^3.5.0",
+    "astro": "^5.18.2",
+    "katex": "^0.17.0",
+    "rehype-katex": "^7.0.1",
+    "remark-directive": "^4.0.0",
+    "remark-math": "^6.0.0",
+    "remark-obsidian-callout": "^1.5.1",
+    "sharp": "^0.35.2"
+  },
+  "//devDependencies": "开发依赖 — Tailwind CSS v4、Pagefind 搜索、TypeScript",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "pagefind": "^1.5.2",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3"
+  }
+}

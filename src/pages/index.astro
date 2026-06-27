@@ -1,0 +1,82 @@
+---
+// @page / — 首页：个人简介、每日一言、站点统计与最近文章
+// Data sources: getPinnedAndSorted(), getSortedPosts(), getCategories(), getTags()
+import Layout from "@layouts/Layout.astro";
+import { getPinnedAndSorted, getSortedPosts, getCategories, getTags } from "@utils/content";
+import { getReadingStats } from "@utils/reading-time";
+import { getCollection } from "astro:content";
+import PostCard from "@components/PostCard.astro";
+import Hitokoto from "@components/Hitokoto.astro";
+
+// 获取随记条目，用于统计字数
+const statusEntries = await getCollection("status");
+
+// 获取置顶优先排序的文章列表，取前 5 篇作为最近文章
+const posts = await getPinnedAndSorted();
+const recentPosts = posts.slice(0, 5);
+
+// 统计总字数：博客文章 + 随记
+const postWords = posts.reduce((s, p) => s + (p.body ? getReadingStats(p.body).words : 0), 0);
+const statusWords = statusEntries.reduce(
+  (s, e) => s + (e.body ? e.body.replace(/\s/g, "").length : 0),
+  0,
+);
+const totalWords = postWords + statusWords;
+
+// 汇总站点统计信息
+const allPosts = await getSortedPosts();
+const categories = await getCategories();
+const tags = await getTags();
+---
+
+<Layout>
+  <div class="pt-2 lg:pt-0">
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">主页</h1>
+
+    {/* ===== 个人简介区域 ===== */}
+    <section class="mb-8 lg:mb-10">
+      <h2
+        class="text-2xl font-bold text-[var(--color-text)] mb-4 lg:text-3xl"
+        style="font-family: var(--font-title)"
+      >
+        你好，我是 Merrick Jun Ouyang。
+      </h2>
+      {/* 每日一言 — 从 hitokoto.cn 获取 */}
+      <Hitokoto />
+    </section>
+
+    {/* ===== 站点统计概览 ===== */}
+    <section class="mb-10">
+      <p
+        class="text-base text-[var(--color-text-muted)] font-[var(--font-nav)] font-bold leading-tight"
+      >
+        目前共有
+        <span class="text-[var(--color-text)]">{allPosts.length}</span> 篇文章，
+        <span class="text-[var(--color-text)]">{categories.length}</span> 个分类，
+        <span class="text-[var(--color-text)]">{tags.length}</span> 个标签，
+        <span class="text-[var(--color-text)]">{statusEntries.length}</span> 条随记， 约 <span
+          class="text-[var(--color-text)]">{totalWords.toLocaleString()}</span
+        > 字。
+      </p>
+    </section>
+
+    {/* ===== 最近文章列表 ===== */}
+    <section class="mb-12 lg:mb-16">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="h-0.5 w-8 bg-[var(--color-text-muted)]/25 lg:w-10"></div>
+        <h2 class="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+          Recent Posts
+        </h2>
+        <div class="w-16 h-px bg-[var(--color-border)] flex-1"></div>
+        <a
+          href="/posts/"
+          class="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors shrink-0"
+          >View all →</a
+        >
+      </div>
+      <div class="flex flex-col">
+        {recentPosts.map((p) => <PostCard post={p} layout="list" />)}
+      </div>
+    </section>
+  </div>
+</Layout>

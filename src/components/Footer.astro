@@ -1,0 +1,96 @@
+---
+// @component Footer — 页脚组件（左侧边栏），包含运行时间、社交图标、搜索与主题切换
+// @custom — blogStartDate (\"2026-06-20\"): 运行时间计数器的起始日期
+import { siteConfig } from "@/config";
+import Icon from "@components/Icon.astro";
+import ThemeButton from "@components/ThemeButton.astro";
+
+const currentYear = new Date().getFullYear();
+const startYear = 2026;
+const year = startYear === currentYear ? `${startYear}` : `${startYear}-${currentYear}`;
+
+/** @custom 博客起始日期，用于运行时间计算 */
+const blogStartDate = "2026-06-20";
+
+/** 社交链接列表 —— 使用 Icon 组件替代内联 SVG */
+const socials = [
+  { name: "GitHub", key: "github", icon: "github" },
+  { name: "Bilibili", key: "bilibili", icon: "bilibili" },
+  { name: "X", key: "x", icon: "x" },
+  { name: "Telegram", key: "telegram", icon: "telegram" },
+] as const;
+
+/** 通讯 / 订阅链接列表 */
+const comms = [
+  { name: "Email", url: "mailto:swayopus@swayopus.space", icon: "email" },
+  { name: "RSS", url: "/rss.xml", icon: "rss" },
+] as const;
+
+const visibleSocials = socials.filter(
+  (s) => siteConfig.social[s.key as keyof typeof siteConfig.social],
+);
+---
+
+<footer class="text-sm font-[var(--font-nav)] lg:text-[0.9375rem]">
+  <p class="text-[var(--color-text-muted)] mb-2">&copy; {year} {siteConfig.author}</p>
+
+  <p class="text-[var(--color-text-muted)] mb-2">
+    <a href="/privacy/" class="highlight-link inline-block py-0.5">Privacy</a>
+    <span class="mx-1.5 text-[var(--color-border)]">·</span>
+    <a href="/sitemap-index.xml" class="highlight-link inline-block py-0.5" data-astro-prefetch="false">Sitemap</a>
+  </p>
+
+  <p class="text-[var(--color-text-muted)] mb-2">
+    <span id="runtime-counter" data-start={blogStartDate}>Uptime -- d</span>
+  </p>
+
+  {/* 第一行：社交链接 */}
+  <div class="flex items-center gap-0.5 -ml-1">
+    {visibleSocials.map((s) => (
+      <a
+        href={siteConfig.social[s.key as keyof typeof siteConfig.social]!}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={s.name}
+        class="icon-btn"
+      >
+        <Icon name={s.icon} size={18} />
+      </a>
+    ))}
+  </div>
+
+  {/* 第二行：Email, RSS, 搜索, 主题切换 */}
+  <div class="flex items-center gap-0.5 -ml-1 mt-1">
+    {comms.map((c) => (
+      <a
+        href={c.url}
+        target={c.url.startsWith("http") ? "_blank" : undefined}
+        rel={c.url.startsWith("http") ? "noopener noreferrer" : undefined}
+        aria-label={c.name}
+        class="icon-btn"
+      >
+        <Icon name={c.icon} size={18} />
+      </a>
+    ))}
+    <button id="search-toggle" aria-label="Search" class="icon-btn">
+      <Icon name="search" size={18} />
+    </button>
+    <ThemeButton />
+  </div>
+</footer>
+
+<script>
+  function updateRuntime() {
+    var el = document.getElementById("runtime-counter");
+    if (!el) return;
+    var start = new Date(el.dataset.start + "T00:00:00");
+    var diff = Date.now() - start.getTime();
+    var days = Math.floor(diff / 86400000);
+    var hours = Math.floor((diff % 86400000) / 3600000);
+    var mins = Math.floor((diff % 3600000) / 60000);
+    el.textContent = "Uptime " + days + "d " + hours + "h " + mins + "m";
+  }
+  updateRuntime();
+  setInterval(updateRuntime, 60000);
+  document.addEventListener("astro:page-load", updateRuntime);
+</script>

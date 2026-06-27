@@ -1,0 +1,106 @@
+---
+// @component Head — HTML <head> 区域组件，包含 SEO 元数据、OpenGraph、Twitter Cards、favicon、字体、KaTeX 和 FOUC 防护
+// @custom — 字体预加载路径、KaTeX CDN URL、og:image 尺寸
+import { siteConfig } from "@/config";
+
+export interface HeadProps {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  slug?: string;
+}
+
+const { title, description = siteConfig.description, ogImage, slug } = Astro.props;
+
+// 构建页面标题："文章标题 · 站点名" 或 "站点名 · 副标题"
+const fullTitle = title
+  ? `${title} · ${siteConfig.title}`
+  : `${siteConfig.title} · ${siteConfig.subtitle}`;
+
+// OG 图片：优先使用自定义属性，否则使用默认 og.png
+const ogUrl = ogImage ?? `${siteConfig.siteUrl}og.png`;
+
+// 规范链接：带尾部斜杠的路径或根路径
+const canonical = slug ? `${siteConfig.siteUrl}${slug}/` : siteConfig.siteUrl;
+---
+
+{/* ========== 主要元数据 ========== */}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="generator" content="Astro" />
+<meta name="author" content={siteConfig.author} />
+<meta name="description" content={description} />
+<title>{fullTitle}</title>
+
+{/* ========== Favicon ========== */}
+<link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+
+{/* ========== KaTeX CSS（仅在 features.katex 启用时加载） ========== */}
+{siteConfig.features.katex && (
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css"
+    media="print"
+    onload="this.media='all'"
+  />
+)}
+
+{/* ========== Canonical 与 RSS ========== */}
+<link rel="canonical" href={canonical} />
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title={`${siteConfig.title} RSS`}
+  href={`${siteConfig.siteUrl}rss.xml`}
+/>
+
+{/* ========== OpenGraph 标签 ========== */}
+<meta property="og:site_name" content={siteConfig.title} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:type" content="website" />
+<meta property="og:image" content={ogUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+{/* ========== Twitter / X 卡片 ========== */}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogUrl} />
+
+<meta name="theme-color" content="#f7eedd" />
+
+{/* ========== 主题切换逻辑 ==========
+  统一的主题管理脚本：
+  1. FOUC 防护 — 在页面渲染前同步应用存储的主题或系统偏好。
+  2. applyTheme() — 供 ThemeButton 等组件调用的共享函数。
+  3. astro:after-swap — View Transitions 导航后重新应用主题。
+*/}
+<script is:inline>
+  /** 将主题应用到 DOM 并持久化 */
+  function applyTheme(dark) {
+    document.documentElement.classList.toggle("dark", dark);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute("content", dark ? "#1e2030" : "#f7eedd");
+    try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) {}
+  }
+
+  // FOUC 防护：立即应用主题
+  (function () {
+    var stored = localStorage.getItem("theme");
+    var isDark = stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    applyTheme(isDark);
+  })();
+
+  // View Transitions 导航后重新应用主题
+  document.addEventListener("astro:after-swap", function () {
+    var stored = localStorage.getItem("theme");
+    if (stored) applyTheme(stored === "dark");
+  });
+</script>
+
+{/* ========== View Transitions 支持 ========== */}
+<meta name="astro-view-transitions-enabled" content="true" />

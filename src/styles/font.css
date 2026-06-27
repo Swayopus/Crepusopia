@@ -1,0 +1,87 @@
+/* ============================================================
+   字体系统 — 目录
+   ============================================================
+   1. LXGW WenKai GB Screen — 正文与 CJK 内容
+   2. Snell Roundhand ........ 装饰展示字体
+   3. JetBrains Mono ......... 代码块与等宽字体
+   ============================================================ */
+
+/* ==========================================================================
+   1. LXGW WenKai GB Screen — 正文、CJK 字符
+      用作文章正文、导航和 UI 标签的主字体。
+      一款针对低分辨率屏幕优化可读性的屏幕优化版楷体 web 字体，
+      覆盖拉丁和 CJK 字形。
+   ========================================================================== */
+@font-face {
+  font-family: "LXGW WenKai GB Screen";
+  src: url("/fonts/LXGWWenKai/LXGWWenKaiGBScreen.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   2. Snell Roundhand — 装饰展示字体
+      用于站点标题 (h1)、侧边栏标题、归档页标题和时间戳。
+      通过 unicode-range 限制为拉丁字符，CJK 文本优雅回退到正文字体。
+      - Snell-Black (weight 900): Hero 大标题、最大的标题
+      - Snell-Bold  (weight 700): 次要标题、文章日期
+   ========================================================================== */
+@font-face {
+  font-family: "Snell-Black";
+  src: url("/fonts/Snell/Snell-Black-SF.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 900;
+  font-style: normal;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Snell-Bold";
+  src: url("/fonts/Snell/Snell-Bold-SF.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 700;
+  font-style: normal;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ==========================================================================
+   3. JetBrains Mono — 代码与等宽字体
+      用于行内代码（`反引号`）和围栏代码块。
+      加载四种字重以覆盖 Shiki 生成的语法高亮 token 的全部范围：
+      - Regular (400) + Italic: 正文代码、注释
+      - Medium  (500):       需要稍微粗一点的等宽字体的 UI 标签
+      - Bold    (700):       关键字和其他高亮 token
+   ========================================================================== */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,0 +1,73 @@
+---
+// @page /categories/:category — 按分类筛选的文章列表，含分类筛选栏
+// Data sources: getCollection("posts"), getReadingStats(), getCategories()
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Layout.astro";
+import PostCard from "@components/PostCard.astro";
+import CategoryBar from "@components/CategoryBar.astro";
+import { getReadingStats } from "@utils/reading-time";
+import { getCategories } from "@utils/content";
+
+/**
+ * 为每个唯一分类生成一个静态路径。
+ * 仅统计非草稿/非隐藏文章中的分类。
+ */
+export async function getStaticPaths() {
+  const posts = await getCollection("posts", (p) => !p.data.draft && !p.data.hidden);
+  const catSet = new Set<string>();
+  posts.forEach((p) => {
+    if (p.data.category) catSet.add(p.data.category.toLowerCase());
+  });
+  return Array.from(catSet).map((c) => ({ params: { category: c } }));
+}
+
+const { category } = Astro.params;
+
+// 获取所有文章和分类列表
+const allPosts = await getCollection("posts", (p) => !p.data.draft && !p.data.hidden);
+const cats = await getCategories();
+
+// 筛选当前分类下的文章，按发布日期倒序排列
+const posts = allPosts
+  .filter((p) => p.data.category?.toLowerCase() === category)
+  .sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+
+// 统计当前分类总字数
+const totalWords = posts.reduce((s, p) => s + (p.body ? getReadingStats(p.body).words : 0), 0);
+
+// 从分类列表中取回原始大小写用于显示
+const displayName = cats.find((c) => c.name.toLowerCase() === category)?.name || category;
+---
+
+<Layout title={`${displayName} · Posts`} slug={`categories/${category}`}>
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">文章</h1>
+
+    {/* 分类筛选栏（高亮当前分类） */}
+    <CategoryBar categories={cats} currentCategory={displayName} />
+
+    {/* 当前分类文章数量与字数 */}
+    <div class="flex items-center gap-3 mb-6">
+      <div class="h-0.5 w-10 bg-[var(--color-text-muted)]/25 lg:w-11"></div>
+      <span class="text-base leading-snug text-[var(--color-text-muted)]"
+        >{posts.length} 篇 · 共 {totalWords.toLocaleString()} 字</span
+      >
+    </div>
+
+    {/* ===== 文章列表 / 空状态 ===== */}
+    {
+      posts.length === 0 ? (
+        <p class="text-base leading-snug text-[var(--color-text-muted)] py-10">
+          该分类下暂无文章。
+        </p>
+      ) : (
+        <div class="flex flex-col">
+          {posts.map((p) => (
+            <PostCard post={p} layout="list" />
+          ))}
+        </div>
+      )
+    }
+  </div>
+</Layout>
