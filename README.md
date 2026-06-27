@@ -4,6 +4,19 @@
 
 基于 **Astro 5** + **Tailwind CSS v4** 的个人静态博客，从零构建。参考了 [Fuwari](https://github.com/saicaca/fuwari)、[Firefly](https://github.com/CuteLeaf/Firefly)、[Neomelt Blog](https://github.com/Neomelt/Neomelt_blog)、[Retypeset](https://github.com/radishzzz/astro-theme-retypeset)、[AstroPaper](https://github.com/satnaing/astro-paper) 等项目的设计与实现。
 
+## 架构图
+
+![Crepusopia 架构图](docs/crepusopia-architecture.png)
+
+图源是 `docs/crepusopia-architecture.html`——一个自包含的深色架构图（内联 SVG、手工排版、坐标固定），按 [Cocoon 架构图 skill](https://github.com/Cocoon-AI/architecture-diagram-generator) 的风格绘制，分为四个阶段：
+
+- **1. SOURCE** — 内容源：Markdown/MDX 文章、Status 微博客、站点配置
+- **2. BUILD / SSG · Astro** — 构建管线：remark 插件 → Shiki 语法高亮 → Astro 5 SSG → Vite + Tailwind CSS v4
+- **3. STATIC OUTPUT** — 产物与部署：`dist/` 纯静态文件，经 Pagefind 生成搜索索引后部署至 Vercel / Cloudflare Pages / Netlify
+- **4. BROWSER RUNTIME** — 浏览器运行时：16 个 Astro 组件驱动主题切换、全文搜索、目录导航、View Transitions 等交互
+
+改完图后重新生成 `.png`：用浏览器打开该 HTML，点右上角 `⋯` → `🖼️ PNG` 导出即可，无需额外工具。
+
 ## 环境要求
 
 - **Node.js** ≥ 22
@@ -112,3 +125,9 @@ pnpm build
 ## Bug 修复记录
 
 见 [BUGFIX.md](BUGFIX.md)。
+
+## 致谢
+
+- **字体** — 正文字体 [LXGW WenKai GB Screen](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）由 [lxgw](https://github.com/lxgw) 创作并以 SIL Open Font License 发布；代码字体 [JetBrains Mono](https://www.jetbrains.com/lp/mono/) 由 JetBrains 提供。感谢字体作者让文字表达更优雅。
+- **博客项目** — 本项目在设计与实现中参考了 [Fuwari](https://github.com/saicaca/fuwari)、[Firefly](https://github.com/CuteLeaf/Firefly)、[Neomelt Blog](https://github.com/Neomelt/Neomelt_blog)、[Retypeset](https://github.com/radishzzz/astro-theme-retypeset)、[AstroPaper](https://github.com/satnaing/astro-paper) 等开源项目，感谢这些作者的分享与付出。
+- **架构图** — 本项目的架构图采用 [Cocoon AI](https://github.com/Cocoon-AI) 开源的 [Architecture Diagram Skill](https://github.com/Cocoon-AI/architecture-diagram-generator) 绘制（MIT License，Copyright © 2025 Cocoon AI），感谢其深色主题设计系统与内联 SVG 模板。
