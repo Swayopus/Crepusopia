@@ -1,0 +1,110 @@
+/* ============================================================
+   字体系统 — 目录
+   ============================================================
+   1. LXGW WenKai GB Screen — 正文与界面
+   2. Corinthia .............. 装饰展示字体
+   3. JetBrains Mono ......... 代码块与等宽字体
+   ============================================================ */
+
+/* LXGW 与 Corinthia 声明由 Head / resource-delivery 管理，不进入阻塞布局 CSS。
+   完整分片、字形文件及 RSS 的相对路径声明仍由 scripts/fonts/subset.py 生成。 */
+
+/* 本地回退只用于网页字体到达前，不下载新字体，也不改变已加载的 LXGW/Corinthia。
+   LXGW 1.530 使用 OS/2 typo 度量：UPM 2048、ascent 2146、descent 555。
+   Latin 按英文样本宽度近似调至 108%；override 除以 1.08 抵消 size-adjust。
+   中文独立为 100% 方块字宽，避免 Latin 的调整把汉字也放大。更新原件时需复核。 */
+@font-face {
+  font-family: "LXGW Fallback";
+  src: local("Arial"), local("Roboto"), local("Liberation Sans");
+  size-adjust: 108%;
+  ascent-override: 97.023293%;
+  descent-override: 25.092231%;
+  line-gap-override: 0%;
+  unicode-range: U+20-024F;
+}
+@font-face {
+  font-family: "LXGW Fallback";
+  src: local("SimSun"), local("Songti SC"), local("Noto Serif CJK SC"), local("Noto Sans CJK SC");
+  ascent-override: 104.785156%;
+  descent-override: 27.099609%;
+  line-gap-override: 0%;
+  unicode-range: U+2E80-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+/* Corinthia 的 typo 度量为 UPM 1000、760/-440/0。
+   站点名与完整姓名分别匹配字宽；Arial/Liberation Sans 与 Roboto 分开注册。
+   独立家族按 global.css 中的顺序回退，桌面先用 Arial，缺失时才使用 Roboto。
+   每组 override = 源度量 × 对应网页字体的 size-adjust / 本地回退的 size-adjust。
+   这里只改变字体加载前的回退；主字体的两个尺寸由 subset.py 统一生成。 */
+@font-face {
+  font-family: "Corinthia Roboto Fallback";
+  src: local("Roboto");
+  size-adjust: 113.545243%;
+  ascent-override: 99.750077%;
+  descent-override: 57.750045%;
+  line-gap-override: 0%;
+  unicode-range: U+20, U+41-5A, U+61-7A;
+}
+@font-face {
+  font-family: "Corinthia Fallback";
+  src: local("Arial"), local("Liberation Sans");
+  size-adjust: 112.4503%;
+  ascent-override: 100.721325%;
+  descent-override: 58.312346%;
+  line-gap-override: 0%;
+  unicode-range: U+20, U+41-5A, U+61-7A;
+}
+@font-face {
+  font-family: "Corinthia Name Roboto Fallback";
+  src: local("Roboto");
+  size-adjust: 122.482596%;
+  ascent-override: 85.907636%;
+  descent-override: 49.736%;
+  line-gap-override: 0%;
+  unicode-range: U+20, U+41-5A, U+61-7A;
+}
+@font-face {
+  font-family: "Corinthia Name Fallback";
+  src: local("Arial"), local("Liberation Sans");
+  size-adjust: 121.433222%;
+  ascent-override: 86.650012%;
+  descent-override: 50.165797%;
+  line-gap-override: 0%;
+  unicode-range: U+20, U+41-5A, U+61-7A;
+}
+
+/* ==========================================================================
+   3. JetBrains Mono — 代码与等宽字体
+      用于行内代码（`反引号`）和围栏代码块。
+      加载四种字重以覆盖 Shiki 生成的语法高亮 token 的全部范围：
+      - Regular (400) + Italic: 正文代码、注释
+      - Medium  (500):       需要稍微粗一点的等宽字体的 UI 标签
+      - Bold    (700):       关键字和其他高亮 token
+   ========================================================================== */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

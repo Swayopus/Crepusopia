@@ -1,0 +1,223 @@
+---
+import Icon from "@components/Icon.astro";
+// @component SearchModal — 搜索模态框组件，使用 Pagefind JS API 实现全文搜索，带自定义 UI
+---
+
+{/* 搜索模态框 — 默认隐藏，通过 #search-toggle 按钮或 Ctrl+K 打开 */}
+<div id="search-modal" class="search-overlay" aria-hidden="true">
+  <div class="search-box" role="dialog" aria-modal="true" aria-label="Search">
+    {/* 头部：标题 + 关闭按钮 */}
+    <div class="search-header">
+      <span class="search-title">搜索</span>
+      <button id="search-close" class="search-close-btn" aria-label="Close">
+        <Icon name="close" size={18} />
+      </button>
+    </div>
+    {/* 主体：搜索输入框 + 结果列表 */}
+    <div class="search-body">
+      <div class="search-input-wrap">
+        <Icon name="search" size={16} class="search-input-icon" />
+        <input
+          type="text"
+          id="search-input"
+          aria-label="搜索文章"
+          class="search-input"
+          placeholder="搜索文章…"
+          autocomplete="off"
+          enterkeyhint="search"
+        />
+        {/* 清除按钮 — 输入内容后显示 */}
+        <button id="search-clear" class="search-clear-btn" aria-label="Clear" type="button">
+          <Icon name="close" size={14} />
+        </button>
+      </div>
+      {/* 搜索结果容器 — 由下方脚本动态填充 */}
+      <div id="search-results" class="search-results" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+{/* 搜索逻辑脚本 — Pagefind 动态导入 + 事件绑定 */}
+<script>
+  import "@/scripts/search";
+</script>
+
+<style is:global>
+  /* --- 遮罩层 --- */
+  .search-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.5);
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: calc(var(--page-height, 100vh) * 0.08);
+    /* padding-left / padding-right 由 JS 动态设置以对齐 <main> */
+  }
+  .search-overlay.open {
+    display: flex;
+  }
+
+  /* --- 搜索框容器 --- */
+  .search-box {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(var(--page-height, 100vh) * 0.7);
+  }
+
+  /* --- 头部 --- */
+  .search-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .search-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .search-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .search-close-btn:hover {
+    color: var(--color-text);
+    background: var(--color-bg-alt);
+  }
+
+  /* --- 主体 --- */
+  .search-body {
+    padding: 0.75rem 1rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  /* --- 输入框区域 --- */
+  .search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .search-input-icon {
+    position: absolute;
+    left: 0.65rem;
+    color: var(--color-text-muted);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  .search-input {
+    width: 100%;
+    padding: 0.4rem 2rem 0.4rem 2rem;
+    border: 1px solid var(--color-card-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-family: var(--font-nav);
+    outline: none;
+    line-height: 1.4;
+  }
+  .search-input:focus {
+    border-color: var(--color-primary);
+  }
+  .search-input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.5;
+  }
+
+  /* --- 清除按钮 --- */
+  .search-clear-btn {
+    position: absolute;
+    right: 0.5rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .search-clear-btn.visible {
+    display: flex;
+  }
+  .search-clear-btn:hover {
+    background: var(--color-text-muted);
+    color: var(--color-bg);
+  }
+
+  /* --- 搜索结果 --- */
+  .search-results {
+    min-height: 0;
+  }
+  .search-hint {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    padding: 1.5rem 0;
+  }
+  .search-hint code {
+    background: var(--color-bg-alt);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+  }
+  .search-count {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.35rem;
+  }
+
+  /* --- 搜索结果项 --- */
+  .search-result-item {
+    display: block;
+    padding: 0.5rem;
+    margin: 0 -0.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: background 0.15s;
+  }
+  .search-result-item:hover {
+    background: var(--color-bg-alt);
+  }
+  .search-result-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.1rem;
+  }
+  .search-result-excerpt {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.45;
+  }
+  .search-result-excerpt mark {
+    background: var(--color-primary);
+    color: var(--color-bg);
+    padding: 0.1em 0.2em;
+    border-radius: 0.15em;
+  }
+</style>

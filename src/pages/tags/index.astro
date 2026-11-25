@@ -1,0 +1,114 @@
+---
+// @page /tags — 标签云页面：标签筛选、View Transitions 动画、从 URL 参数 ?tag= 自动过滤
+import Layout from "@layouts/Layout.astro";
+import { getTags, getSortedPosts } from "@utils/content";
+import { getReadingStats } from "@utils/reading-time";
+import { formatDate } from "@utils/date";
+import { getPostUrl } from "@utils/slug";
+import { tagUrl, withBase } from "@utils/url";
+
+// 获取所有标签及文章数据
+const tags = await getTags();
+const allPosts = await getSortedPosts();
+---
+
+<Layout title="Tags">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">
+      标签
+      <span
+        class="text-base text-[var(--color-text-muted)] font-normal ml-2"
+        style="font-family: var(--font-nav)"
+        >{tags.length} 个标签</span
+      >
+    </h1>
+
+    {/* ===== 标签云 ===== */}
+    <div class="flex flex-wrap gap-3 mb-8" id="tag-cloud">
+      {tags.map((tag) => <a
+        data-tag={tag.name}
+        data-astro-prefetch="false"
+        href={tagUrl(tag.name)}
+        class="tag-pill inline-flex items-center px-4 py-2.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 text-base leading-snug cursor-pointer"
+        style="transition: background-color 0.2s ease"
+      >
+        {tag.name}
+        <span class="ml-1.5 opacity-60">{tag.count}</span>
+      </a>)}
+    </div>
+
+    {/* 常驻状态区供屏幕阅读器播报；不能放进默认隐藏的结果区域。 */}
+    <p id="tag-result-status" class="sr-only" role="status" aria-atomic="true"></p>
+
+    {/* ===== 标签筛选结果区域（默认隐藏） ===== */}
+    <div id="tag-results" class="hidden">
+      <div class="flex items-center gap-3 mb-6">
+        {/* 返回按钮 */}
+        <a
+          id="tag-back"
+          data-astro-prefetch="false"
+          href={withBase("/tags/")}
+          class="inline-flex items-center px-4 py-2.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 text-base leading-snug cursor-pointer"
+        >
+          ← All Tags
+        </a>
+        {/* 筛选结果计数 */}
+        <span
+          class="text-base leading-snug text-[var(--color-text-muted)]"
+          id="tag-result-count"
+        ></span>
+      </div>
+      {/* 筛选后的文章列表容器 */}
+      <div class="flex flex-col" id="tag-posts"></div>
+      {/* 预渲染卡片模板，筛选时克隆节点；Astro 在构建时负责转义内容。 */}
+      {allPosts.map((post) => <template
+        data-post-tags={JSON.stringify(post.data.tags)}
+        data-words={getReadingStats(post.body ?? "").words}
+      >
+        <a
+          href={getPostUrl(post)}
+          class="group block py-5 px-4 -mx-4 rounded-lg hover:bg-[var(--color-bg-alt)]/50 transition-colors duration-200"
+          ><article>
+            <h2
+              class="text-xl font-semibold text-[var(--color-text)] mt-0 mb-1.5 group-hover:text-[var(--color-primary)] transition-colors leading-tight"
+            >
+              {post.data.title}
+            </h2>
+            <div
+              class="flex flex-wrap items-center gap-x-2 text-base text-[var(--color-text-muted)] mb-1.5 font-(family-name:--font-nav) font-bold leading-tight"
+            >
+              <time datetime={post.data.published.toISOString()}
+                >{formatDate(post.data.published)}</time
+              >
+              {post.data.category && (
+                <><span aria-hidden="true">·</span><span>{post.data.category}</span></>
+              )}
+            </div>
+            {post.data.description && <p
+              class="text-base text-[var(--color-text-muted)] leading-snug"
+            >
+              {post.data.description}
+            </p>}
+            <div class="flex flex-wrap gap-1.5 mt-1">
+              {post.data.tags.map((tag) => <span
+                class="px-2 py-0.5 text-xs leading-snug rounded-md bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]"
+                >{tag}</span
+              >)}
+            </div>
+          </article></a
+        >
+      </template>)}
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import "../../scripts/tags";
+</script>

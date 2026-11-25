@@ -1,0 +1,182 @@
+---
+// @component Head — SEO、主题初始化，以及字体/公式样式的构建交付入口。
+import { siteConfig } from "@/config";
+import { absoluteUrl, withBase } from "@utils/url";
+import mathStyles from "katex/dist/katex.min.css?inline";
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  ogType?: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
+}
+
+const {
+  title,
+  description = siteConfig.description,
+  ogImage,
+  ogType = "website",
+  publishedTime,
+  modifiedTime,
+} = Astro.props;
+
+// 构建页面标题："文章标题 · 站点名" 或 "站点名 · 副标题"
+const fullTitle = title
+  ? `${title} · ${siteConfig.title}`
+  : `${siteConfig.title} · ${siteConfig.subtitle}`;
+
+// 仅输出实际配置的图片，避免指向不存在的 og.png。
+const ogUrl = ogImage ? absoluteUrl(ogImage) : undefined;
+
+// 规范链接：带尾部斜杠的路径或根路径
+const isNotFound = /\/404(?:\/|\.html)$/.test(Astro.url.pathname);
+const canonical = new URL(
+  isNotFound ? withBase("/404.html") : Astro.url.pathname,
+  siteConfig.siteUrl,
+).href;
+---
+
+{/* ========== 主要元数据 ========== */}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+{/* 开发时完整声明便于热更新；静态构建在最终 HTML 中选择初始用字并保留全字库。 */}
+{import.meta.env.DEV ? (
+  <>
+    <link rel="stylesheet" href={withBase("/fonts/LXGWWenKai/font.css")} />
+    <link rel="stylesheet" href={withBase("/fonts/Corinthia/font.css")} />
+  </>
+) : (
+  <meta name="crepusopia-fonts" />
+)}
+{/* ?inline 保留 Vite 的字体 URL 转换；构建后仅实际含公式的页面引用共享 CSS。 */}
+{siteConfig.features.katex && <style is:inline data-math-styles set:html={mathStyles} />}
+<!-- 以 2440×1440 浏览器窗口为基准；大屏连续放大，窄窗用抽屉保留可读字号。 -->
+<script is:inline>
+  (() => {
+    // 与 theme.css 的 lg 条件保持一致，避免宽屏平板误用桌面缩放。
+    const desktopLayout = matchMedia("(min-width: 1800px) and (hover: hover) and (pointer: fine)");
+    function applyPageScale(doc = document) {
+      const root = doc.documentElement;
+      if (desktopLayout.matches) {
+        const width = 2440;
+        const height = 1440;
+        // Edge/Chrome 的窗口尺寸不随 Ctrl+滚轮改变；用 innerWidth 会抵消用户缩放。
+        // 非最大化时优先减少留白，不再把正文自动缩小到原字号以下。
+        const windowWidth = outerWidth || innerWidth;
+        const windowHeight = outerHeight || innerHeight;
+        const scale = Math.max(1, Math.min(windowWidth / width, windowHeight / height));
+        root.style.setProperty("--page-scale", String(scale));
+        // 用实际可用宽度限制水平偏移，手动放大时也不把内容推出右侧。
+        root.style.setProperty("--page-width", `${innerWidth / scale}px`);
+        // 保留已确认的搜索弹窗和目录内部高度基准。
+        root.style.setProperty("--page-height", "1080px");
+      } else {
+        root.style.removeProperty("--page-scale");
+        root.style.removeProperty("--page-width");
+        root.style.removeProperty("--page-height");
+      }
+    }
+    applyPageScale();
+    if (!window.__crepusopiaScaleReady) {
+      window.__crepusopiaScaleReady = true;
+      window.addEventListener("resize", () => applyPageScale());
+      desktopLayout.addEventListener("change", () => applyPageScale());
+      document.addEventListener("astro:before-swap", (event) => applyPageScale(event.newDocument));
+    }
+  })();
+</script>
+<meta name="generator" content="Astro" />
+<meta name="author" content={siteConfig.author} />
+<meta name="description" content={description} />
+{isNotFound && <meta name="robots" content="noindex" />}
+<title>{fullTitle}</title>
+
+{/* ========== Favicon ========== */}
+{/* 独立的小尺寸头像图标，沿用原图标的圆角轮廓；新 URL 避免旧标签页图标缓存。 */}
+<link rel="icon" type="image/svg+xml" href={withBase("/icons/favicon-avatar.svg")} />
+
+{/* ========== Canonical 与 RSS ========== */}
+<link rel="canonical" href={canonical} />
+{siteConfig.features.rss && (
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title={`${siteConfig.title} RSS`}
+    href={absoluteUrl("/rss.xml")}
+  />
+)}
+
+{/* ========== OpenGraph 标签 ========== */}
+<meta property="og:site_name" content={siteConfig.title} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:type" content={ogType} />
+{ogType === "article" && publishedTime && (
+  <meta property="article:published_time" content={publishedTime} />
+)}
+{ogType === "article" && modifiedTime && (
+  <meta property="article:modified_time" content={modifiedTime} />
+)}
+{ogUrl && <meta property="og:image" content={ogUrl} />}
+
+{/* ========== Twitter / X 卡片 ========== */}
+<meta name="twitter:card" content={ogUrl ? "summary_large_image" : "summary"} />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+{ogUrl && <meta name="twitter:image" content={ogUrl} />}
+
+<meta name="crepusopia-default-theme" content={siteConfig.theme.defaultMode} />
+<meta name="theme-color" content="#f7eedd" />
+
+{/* ========== 主题切换逻辑 ==========
+  统一的主题管理脚本：
+  1. FOUC 防护 — 在页面渲染前同步应用存储的主题或系统偏好。
+  2. applyTheme() — 供 ThemeButton 等组件调用的共享函数。
+  3. astro:after-swap — View Transitions 导航后重新应用主题。
+*/}
+<script is:inline>
+  (() => {
+    function preferred() {
+      let mode = document.querySelector('meta[name="crepusopia-default-theme"]')?.content || "auto";
+      try {
+        const saved = localStorage.getItem("theme");
+        if (saved === "light" || saved === "dark") mode = saved;
+      } catch {}
+      return (
+        mode === "dark" || (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches)
+      );
+    }
+    function apply(doc, dark) {
+      doc.documentElement.classList.toggle("dark", dark);
+      doc.documentElement.dataset.theme = dark ? "dark" : "light";
+      doc
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute("content", dark ? "#1e2030" : "#f7eedd");
+    }
+    window.applyTheme = (dark, persist = false) => {
+      apply(document, dark);
+      // 自动检测不能保存为人工选择，否则后续无法再跟随系统。
+      if (persist)
+        try {
+          localStorage.setItem("theme", dark ? "dark" : "light");
+        } catch {}
+    };
+    window.applyTheme(preferred());
+    if (!window.__crepusopiaThemeReady) {
+      window.__crepusopiaThemeReady = true;
+      document.addEventListener("astro:before-swap", (event) =>
+        apply(event.newDocument, preferred()),
+      );
+      document.addEventListener("astro:after-swap", () => window.applyTheme(preferred()));
+      matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () =>
+        window.applyTheme(preferred()),
+      );
+      window.addEventListener("storage", (event) => {
+        if (event.key === "theme") window.applyTheme(preferred());
+      });
+    }
+  })();
+</script>

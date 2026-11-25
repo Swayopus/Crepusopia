@@ -1,0 +1,69 @@
+---
+import Icon from "@components/Icon.astro";
+// @component PostCardList — 列表布局文章卡片（水平行）
+import type { Post } from "@utils/content";
+import { formatDate } from "@utils/date";
+import { getPostUrl } from "@utils/slug";
+import { getReadingStats, formatReadingStats } from "@utils/reading-time";
+import { siteConfig } from "@/config";
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const { data, body: rawBody } = post;
+const stats = rawBody ? getReadingStats(rawBody) : { words: 0, minutes: 0 };
+const desc = data.description || "";
+---
+
+<a
+  href={getPostUrl(post)}
+  class="group block py-5 px-4 -mx-4 rounded-lg hover:bg-[var(--color-bg-alt)]/50 transition-colors duration-200"
+>
+  <article>
+    <h2
+      class="text-xl font-semibold text-[var(--color-text)] mt-0 mb-1.5 group-hover:text-[var(--color-primary)] transition-colors leading-tight"
+    >
+      {data.title}
+    </h2>
+
+    <div
+      class="flex flex-wrap items-center gap-x-2 text-base text-[var(--color-text-muted)] mb-1.5 font-(family-name:--font-nav) font-bold leading-tight"
+    >
+      <time datetime={data.published.toISOString()}>{formatDate(data.published)}</time>
+      {data.updated && data.updated.getTime() !== data.published.getTime() && (
+        <>
+          <span aria-hidden="true">·</span>
+          <time datetime={data.updated.toISOString()}> Updated {formatDate(data.updated)} </time>
+        </>
+      )}
+      {data.category && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>{data.category}</span>
+        </>
+      )}
+      {siteConfig.postList.showReadingTime && (
+        <><span aria-hidden="true">·</span> <span>{formatReadingStats(stats)}</span></>
+      )}
+      {data.pinned && (
+        <Icon
+          name="pin"
+          size={14}
+          class="w-3.5 h-3.5 text-[var(--color-text-muted)]/50 flex-shrink-0"
+        />
+      )}
+    </div>
+
+    {desc && <p class="text-base text-[var(--color-text-muted)] leading-snug">{desc}</p>}
+
+    {data.tags.length > 0 && <div class="flex flex-wrap gap-1.5 mt-1">
+      {data.tags.map((t) => <span
+        class="px-2 py-0.5 text-xs leading-snug rounded-md bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]"
+      >
+        {t}
+      </span>)}
+    </div>}
+  </article>
+</a>

@@ -1,0 +1,389 @@
+---
+// @component CodeCopyButton — 代码块增强组件：为 <pre> 添加语言标签、折叠切换和复制按钮
+// @custom — COLLAPSE_LINE_THRESHOLD (14): 代码块行数 >= 此值时自动折叠
+---
+
+<script>
+  // @custom — 代码块行数达到此阈值时页面加载后自动折叠
+  const COLLAPSE_LINE_THRESHOLD = 14;
+
+  /** 将字符串首字母转为大写 */
+  function toTitleCase(v: string) {
+    if (!v) return "Code";
+    return v.charAt(0).toUpperCase() + v.slice(1);
+  }
+
+  /** 将常见语言标识符映射为显示友好的名称 */
+  function formatLanguage(lang: string) {
+    const n = (lang || "").trim().toLowerCase();
+    if (!n) return "Code";
+    const aliases: Record<string, string> = {
+      js: "JavaScript",
+      jsx: "JSX",
+      ts: "TypeScript",
+      typescript: "TypeScript",
+      javascript: "JavaScript",
+      tsx: "TSX",
+      py: "Python",
+      rb: "Ruby",
+      rs: "Rust",
+      go: "Go",
+      java: "Java",
+      c: "C",
+      cpp: "C++",
+      cs: "C#",
+      csharp: "C#",
+      sh: "Shell",
+      bash: "Bash",
+      shell: "Shell",
+      zsh: "Zsh",
+      yml: "YAML",
+      yaml: "YAML",
+      md: "Markdown",
+      tex: "TeX",
+      html: "HTML",
+      css: "CSS",
+      scss: "SCSS",
+      json: "JSON",
+      plaintext: "Text",
+      text: "Text",
+      sql: "SQL",
+      graphql: "GraphQL",
+      dockerfile: "Dockerfile",
+      toml: "TOML",
+      ini: "INI",
+      env: "Env",
+    };
+    return aliases[n] || toTitleCase(n);
+  }
+
+  /** 从 <pre> 块中提取原始代码文本 */
+  function getCodeText(block: HTMLElement) {
+    const code = block.querySelector("code");
+    return code ? (code.textContent ?? "") : (block.textContent ?? "");
+  }
+
+  /** 从 data-language 属性或 language-* class 检测语言 */
+  function getLanguage(block: HTMLElement) {
+    const d = block.getAttribute("data-language");
+    if (d) return formatLanguage(d);
+    const cls = Array.from(block.classList).find((c) => c.startsWith("language-"));
+    if (cls) return formatLanguage(cls.replace("language-", ""));
+    return "Code";
+  }
+
+  /** 统计代码块行数（优先使用 .line 元素） */
+  function getLineCount(block: HTMLElement) {
+    const lines = block.querySelectorAll("code .line");
+    if (lines.length > 0) return lines.length;
+    const text = getCodeText(block).replace(/\n+$/, "");
+    return text ? text.split("\n").length : 0;
+  }
+
+  /** 创建折叠/展开切换按钮（chevron 图标 + 语言标签） */
+  function createToggle(wrapper: HTMLElement) {
+    const btn = document.createElement("button");
+    btn.className = "code-toggle-trigger";
+    btn.type = "button";
+    // 可见文件名和语言作为辅助名称；展开状态由 aria-expanded 单独表达。
+    btn.setAttribute("aria-expanded", "true");
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="toggle-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><span class="code-language"></span>`;
+    btn.addEventListener("click", () => {
+      const collapsed = wrapper.classList.toggle("is-collapsed");
+      btn.setAttribute("aria-expanded", String(!collapsed));
+    });
+    return btn;
+  }
+
+  /** 创建复制到剪贴板按钮，点击后显示对勾反馈 */
+  function createCopyBtn(block: HTMLElement) {
+    const btn = document.createElement("button");
+    btn.className = "code-header-button copy-code-button";
+    btn.type = "button";
+    const defaultLabel = "Copy code";
+    btn.setAttribute("aria-label", defaultLabel);
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    let reset: ReturnType<typeof setTimeout>;
+    let attempt = 0;
+    btn.addEventListener("click", async () => {
+      const current = ++attempt;
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(getCodeText(block));
+        copied = true;
+      } catch {}
+      // 连续点击时，较早的异步结果不能覆盖最新一次操作的反馈。
+      if (current !== attempt) return;
+      clearTimeout(reset);
+      btn.classList.toggle("copied", copied);
+      btn.setAttribute("aria-label", copied ? defaultLabel : "复制失败，请手动选择代码");
+      reset = setTimeout(() => {
+        btn.classList.remove("copied");
+        btn.setAttribute("aria-label", defaultLabel);
+      }, 2000);
+    });
+    return btn;
+  }
+
+  /**
+   * 主增强函数：将 .prose 与 .status-body 下的每个 <pre> 包裹进 .code-block-shell 并添加顶部工具栏。
+   * 通过 data-code-enhanced 标记实现幂等性。超过行数阈值的代码块初始折叠。
+   */
+  function enhance() {
+    document.querySelectorAll<HTMLElement>(".prose pre, .status-body pre").forEach((block) => {
+      if (block.dataset.codeEnhanced === "true") return;
+      block.dataset.codeEnhanced = "true";
+
+      // 将 <pre> 包裹在 shell div 中以实现 header + code 布局
+      const shell = document.createElement("div");
+      shell.className = "code-block-shell";
+      block.parentNode?.insertBefore(shell, block);
+      shell.appendChild(block);
+
+      // 构建顶部工具栏：折叠切换（含语言标签）+ 操作按钮（复制）
+      const header = document.createElement("div");
+      header.className = "code-block-header";
+      const toggle = createToggle(shell);
+      // 围栏元数据里的文件名优先显示在语言标签之前；过长时由 CSS 截断。
+      const filename = block.dataset.filename?.trim();
+      if (filename) {
+        const name = document.createElement("span");
+        name.className = "code-filename";
+        name.textContent = filename;
+        name.title = filename;
+        toggle.insertBefore(name, toggle.querySelector(".code-language"));
+      }
+      toggle.querySelector(".code-language")!.textContent = getLanguage(block);
+      const actions = document.createElement("div");
+      actions.className = "code-header-actions";
+      actions.appendChild(createCopyBtn(block));
+      header.append(toggle, actions);
+      shell.insertBefore(header, block);
+
+      // 长代码块自动折叠
+      if (getLineCount(block) >= COLLAPSE_LINE_THRESHOLD) {
+        shell.classList.add("is-collapsed");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
+  // ---- 可折叠 Callout 切换 ----
+  function bindCalloutToggle() {
+    document.querySelectorAll<HTMLElement>('blockquote[data-expandable="true"]').forEach((bq) => {
+      const title = bq.querySelector<HTMLElement>(":scope > .callout-title");
+      if (!title || title.dataset.calloutBound === "1") return;
+      title.dataset.calloutBound = "1";
+      title.setAttribute("role", "button");
+      if (!title.textContent?.trim()) title.setAttribute("aria-label", "展开或收起提示块");
+      title.setAttribute("tabindex", "0");
+      title.setAttribute("aria-expanded", bq.getAttribute("data-expanded") ?? "false");
+      title.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const expanded = bq.getAttribute("data-expanded") === "true";
+        bq.setAttribute("data-expanded", expanded ? "false" : "true");
+        title!.setAttribute("aria-expanded", String(!expanded));
+      });
+      title.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          title!.click();
+        }
+      });
+    });
+  }
+  bindCalloutToggle();
+
+  enhance();
+  document.addEventListener("astro:page-load", function () {
+    enhance();
+    bindCalloutToggle();
+  });
+</script>
+
+<style is:global>
+  /* --- Shell（外层包裹容器） --- */
+  .code-block-shell {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+    background: var(--color-code-bg);
+  }
+
+  /* shell 内重置 <pre> 的 margin */
+  .code-block-shell pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    padding: 1rem 1.1rem 1.1rem;
+    overflow-x: auto;
+  }
+
+  /* --- 顶部工具栏 --- */
+  .code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.45rem 0.3rem 0.25rem;
+    background: var(--color-bg-alt);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* --- 折叠切换按钮 --- */
+  .code-toggle-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    /* 给右侧复制按钮留出空间，长文件名在中间截断。 */
+    max-width: calc(100% - 2.6rem);
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    padding: 0.3rem 0.45rem;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1;
+    font-family: var(--font-nav);
+    /* 与右侧复制按钮的悬停过渡保持一致。 */
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .code-toggle-trigger .code-filename {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+  .code-toggle-trigger .code-language {
+    flex-shrink: 0;
+  }
+
+  /* 文件名和语言标签之间用淡分隔符，避免读成一长串。 */
+  .code-toggle-trigger .code-filename + .code-language::before {
+    content: "·";
+    margin-right: 0.45em;
+    opacity: 0.55;
+  }
+
+  /* 触屏点按后浏览器会保留 :hover，导致灰色背景常驻；只在支持悬停的设备启用。 */
+  @media (hover: hover) {
+    .code-toggle-trigger:hover {
+      background: var(--color-border);
+    }
+  }
+
+  /* 键盘操作仍需要清晰的焦点反馈。 */
+  .code-toggle-trigger:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* 展开状态时 chevron 旋转 180 度 */
+  .code-toggle-trigger .toggle-icon {
+    transition: transform 0.18s ease;
+  }
+
+  .code-block-shell:not(.is-collapsed) .code-toggle-trigger .toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  /* --- 操作按钮区域（复制） --- */
+  .code-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .code-header-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.95rem;
+    height: 1.95rem;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .code-header-button:hover {
+      background: var(--color-border);
+      color: var(--color-text);
+    }
+  }
+
+  .code-header-button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* --- 复制成功状态 --- */
+  .copy-code-button.copied {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #22c55e;
+  }
+
+  /* 复制成功后切换图标：隐藏复制图标，显示对勾图标 */
+  .copy-code-button .check-icon {
+    display: none;
+  }
+  .copy-code-button.copied .copy-icon {
+    display: none;
+  }
+  .copy-code-button.copied .check-icon {
+    display: block;
+  }
+
+  /* --- 折叠状态：隐藏 <pre> --- */
+  .code-block-shell.is-collapsed pre {
+    display: none;
+  }
+
+  /* --- 行号与重点行（构建期由 Shiki transformer 标记） --- */
+  /* 保留 Shiki 原有换行符；block 会与换行符叠加，产生双倍行距。 */
+  pre.has-line-numbers .line,
+  pre.has-highlighted-lines .line {
+    display: inline-block;
+    min-width: 100%;
+  }
+
+  /* 空行也保留重点行背景的高度，伪元素不进入复制文本。 */
+  pre.has-line-numbers .line:empty::after,
+  pre.has-highlighted-lines .line:empty::after {
+    content: "\00a0";
+  }
+
+  /* 行号由构建期写入 data-line-number，复制文本不包含它。 */
+  pre.has-line-numbers .line::before {
+    content: attr(data-line-number);
+    display: inline-block;
+    width: 2.2em;
+    margin-right: 1em;
+    text-align: right;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    user-select: none;
+  }
+
+  pre .line-highlight {
+    background: color-mix(in oklch, var(--color-primary) 13%, transparent);
+    box-shadow: inset 2px 0 0 var(--color-primary);
+  }
+</style>

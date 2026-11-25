@@ -1,0 +1,56 @@
+---
+// @page /posts — 文章列表首页（第 1 页，每页 10 篇），含分类筛选栏与分页导航
+import Layout from "@layouts/Layout.astro";
+import { siteConfig } from "@/config";
+import { getSortedPosts, getCategories } from "@utils/content";
+import { getReadingStats } from "@utils/reading-time";
+import PostCard from "@components/PostCard.astro";
+import CategoryBar from "@components/CategoryBar.astro";
+import Pagination from "@components/Pagination.astro";
+
+// 获取所有已发布文章，分页：每页 10 篇，此处展示第 1 页
+const allPosts = await getSortedPosts();
+const pageSize = siteConfig.postList.postsPerPage;
+const totalPages = Math.ceil(allPosts.length / pageSize);
+const posts = allPosts.slice(0, pageSize);
+
+// 统计总字数和分类列表
+const totalWords = allPosts.reduce((s, p) => s + (p.body ? getReadingStats(p.body).words : 0), 0);
+const cats = await getCategories();
+---
+
+<Layout title="Posts">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题：文章数量 + 总字数 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">
+      文章
+      <span
+        class="text-base text-[var(--color-text-muted)] font-normal ml-2"
+        style="font-family: var(--font-nav)"
+        >{allPosts.length} 篇 · 共 {totalWords.toLocaleString()} 字</span
+      >
+    </h1>
+
+    {/* 分类筛选栏 */}
+    {cats.length > 0 && <CategoryBar categories={cats} />}
+
+    {/* ===== 文章列表 / 空状态 ===== */}
+    {posts.length === 0 ? (
+      <p class="text-[var(--color-text-muted)] py-10">No posts yet.</p>
+    ) : (
+      <div
+        class={
+          siteConfig.postList.defaultLayout === "grid"
+            ? "grid sm:grid-cols-2 gap-4"
+            : "flex flex-col"
+        }
+      >
+        {posts.map((p) => (
+          <PostCard post={p} />
+        ))}
+      </div>
+    )}
+
+    <Pagination currentPage={1} totalPages={totalPages} />
+  </div>
+</Layout>

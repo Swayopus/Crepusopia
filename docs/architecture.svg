@@ -1,0 +1,1102 @@
+<svg
+  viewBox="0 0 1440 976"
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-labelledby="arch-title arch-desc"
+  font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+>
+  <title id="arch-title">Crepusopia Architecture Diagram</title>
+  <desc id="arch-desc">
+    Static blog architecture for Crepusopia v0.2.2 showing source content and config,
+    Astro 7 build and render pipeline with remark/rehype/Shiki and resource delivery,
+    Pagefind static output and verification, and browser runtime modules.
+  </desc>
+
+  <defs>
+    <marker
+      id="arrowhead-violet"
+      markerWidth="9"
+      markerHeight="6"
+      refX="8"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 9 3, 0 6" fill="#a78bfa" />
+    </marker>
+    <marker
+      id="arrowhead-emerald"
+      markerWidth="9"
+      markerHeight="6"
+      refX="8"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 9 3, 0 6" fill="#34d399" />
+    </marker>
+    <marker
+      id="arrowhead-cyan"
+      markerWidth="9"
+      markerHeight="6"
+      refX="8"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 9 3, 0 6" fill="#22d3ee" />
+    </marker>
+    <marker
+      id="arrowhead-amber"
+      markerWidth="9"
+      markerHeight="6"
+      refX="8"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 9 3, 0 6" fill="#fbbf24" />
+    </marker>
+    <marker
+      id="arrowhead-orange"
+      markerWidth="9"
+      markerHeight="6"
+      refX="8"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 9 3, 0 6" fill="#fb923c" />
+    </marker>
+    <marker
+      id="arrowhead-slate"
+      markerWidth="9"
+      markerHeight="6"
+      refX="8"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 9 3, 0 6" fill="#94a3b8" />
+    </marker>
+    <marker
+      id="arrowhead-rose"
+      markerWidth="9"
+      markerHeight="6"
+      refX="8"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 9 3, 0 6" fill="#fb7185" />
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.6" />
+    </pattern>
+    <clipPath id="diagram-clip">
+      <rect x="0" y="0" width="1400" height="860" rx="14" />
+    </clipPath>
+  </defs>
+
+  <!-- Outer Canvas -->
+  <rect width="1440" height="976" rx="16" fill="#020617" />
+
+  <!-- Standalone Header -->
+  <circle cx="38" cy="40" r="6" fill="#22d3ee" />
+  <text x="56" y="47" fill="white" font-size="22" font-weight="700" letter-spacing="-0.5">
+    Crepusopia Architecture
+  </text>
+  <rect
+    x="378"
+    y="28"
+    width="62"
+    height="22"
+    rx="11"
+    fill="rgba(8, 51, 68, 0.55)"
+    stroke="rgba(34, 211, 238, 0.45)"
+    stroke-width="1"
+  />
+  <text x="409" y="42.5" fill="#22d3ee" font-size="10.5" font-weight="600" text-anchor="middle">
+    v0.2.2
+  </text>
+  <text x="56" y="72" fill="#94a3b8" font-size="12">
+    Astro 7.4 SSG + TypeScript 6 + Tailwind CSS v4 — Static Blog Architecture · Left-to-right data flow
+  </text>
+
+  <!-- Inner Diagram Frame -->
+  <rect
+    x="20"
+    y="96"
+    width="1400"
+    height="860"
+    rx="14"
+    fill="rgba(15, 23, 42, 0.5)"
+    stroke="#1e293b"
+    stroke-width="1.25"
+  />
+
+  <!-- Main Diagram Content (offset x=20, y=96) -->
+  <g transform="translate(20, 96)" clip-path="url(#diagram-clip)">
+    <!-- Background Grid -->
+    <rect width="1400" height="860" fill="url(#grid)" />
+
+    <!-- ============================================================
+         SECTION BOUNDARIES
+         ============================================================ -->
+    <!-- 1. SOURCE & CONFIG -->
+    <rect
+      x="20"
+      y="24"
+      width="265"
+      height="426"
+      rx="10"
+      fill="rgba(251, 191, 36, 0.03)"
+      stroke="#fbbf24"
+      stroke-width="1.25"
+      stroke-dasharray="8,4"
+    />
+    <!-- 2. BUILD & RENDER PIPELINE -->
+    <rect
+      x="315"
+      y="24"
+      width="595"
+      height="426"
+      rx="10"
+      fill="rgba(251, 191, 36, 0.03)"
+      stroke="#fbbf24"
+      stroke-width="1.25"
+      stroke-dasharray="8,4"
+    />
+    <!-- 3. STATIC OUTPUT & DELIVERY -->
+    <rect
+      x="940"
+      y="24"
+      width="440"
+      height="426"
+      rx="10"
+      fill="rgba(251, 191, 36, 0.03)"
+      stroke="#fbbf24"
+      stroke-width="1.25"
+      stroke-dasharray="8,4"
+    />
+    <!-- 4. BROWSER RUNTIME -->
+    <rect
+      x="20"
+      y="494"
+      width="1360"
+      height="282"
+      rx="10"
+      fill="rgba(8, 51, 68, 0.07)"
+      stroke="#22d3ee"
+      stroke-width="1.25"
+      stroke-dasharray="8,4"
+    />
+
+    <!-- ============================================================
+         ARROWS (planar orthogonal routing)
+         ============================================================ -->
+    <g fill="none" stroke-width="1.5" stroke-linejoin="round">
+      <!-- Content Posts → remark Pipeline -->
+      <line
+        x1="269"
+        y1="116"
+        x2="333"
+        y2="116"
+        stroke="#a78bfa"
+        marker-end="url(#arrowhead-violet)"
+      />
+
+      <!-- Status & Assets → remark Pipeline -->
+      <path
+        d="M 269 240 L 290 240 Q 298 240 298 232 L 298 154 Q 298 146 306 146 L 333 146"
+        stroke="#a78bfa"
+        marker-end="url(#arrowhead-violet)"
+      />
+
+      <!-- siteConfig → Astro 7 SSG -->
+      <path
+        d="M 269 360 L 292 360 Q 300 360 300 352 Q 300 344 308 344 L 574 344 Q 582 344 582 336 L 582 254 Q 582 246 590 246 L 613 246"
+        stroke="#34d399"
+        marker-end="url(#arrowhead-emerald)"
+      />
+
+      <!-- remark Pipeline → rehype + Shiki 4 -->
+      <line
+        x1="450"
+        y1="174"
+        x2="450"
+        y2="212"
+        stroke="#34d399"
+        marker-end="url(#arrowhead-emerald)"
+      />
+
+      <!-- rehype + Shiki 4 → Astro 7 SSG -->
+      <line
+        x1="565"
+        y1="226"
+        x2="613"
+        y2="226"
+        stroke="#34d399"
+        marker-end="url(#arrowhead-emerald)"
+      />
+
+      <!-- Vite + Tailwind CSS v4 → Astro 7 SSG -->
+      <path
+        d="M 565 396 L 590 396 Q 598 396 598 388 L 598 274 Q 598 266 606 266 L 613 266"
+        stroke="#22d3ee"
+        marker-end="url(#arrowhead-cyan)"
+      />
+
+      <!-- Astro 7 SSG → astro:build:done → Resource Delivery -->
+      <line x1="752.5" y1="284" x2="752.5" y2="294" stroke="#fb923c" />
+      <line
+        x1="752.5"
+        y1="314"
+        x2="752.5"
+        y2="322"
+        stroke="#fb923c"
+        marker-end="url(#arrowhead-orange)"
+      />
+
+      <!-- Resource Delivery → dist/ Output -->
+      <path
+        d="M 890 376 L 917 376 Q 925 376 925 368 L 925 127 Q 925 119 933 119 L 958 119"
+        stroke="#22d3ee"
+        stroke-width="1.75"
+        marker-end="url(#arrowhead-cyan)"
+      />
+
+      <!-- dist/ Output → Verify & Audit -->
+      <line
+        x1="1162"
+        y1="119"
+        x2="1188"
+        y2="119"
+        stroke="#fb7185"
+        stroke-dasharray="4,3"
+        marker-end="url(#arrowhead-rose)"
+      />
+
+      <!-- dist/ Output → Pagefind 1.5 -->
+      <line
+        x1="1061"
+        y1="174"
+        x2="1061"
+        y2="212"
+        stroke="#94a3b8"
+        stroke-dasharray="5,4"
+        marker-end="url(#arrowhead-slate)"
+      />
+
+      <!-- Pagefind 1.5 → Static Hosting -->
+      <line
+        x1="1061"
+        y1="294"
+        x2="1061"
+        y2="332"
+        stroke="#fbbf24"
+        marker-end="url(#arrowhead-amber)"
+      />
+
+      <!-- Static Hosting → Browser Runtime -->
+      <line x1="1061" y1="428" x2="1061" y2="472" stroke="#fbbf24" />
+      <path
+        d="M 216 480 Q 216 472 224 472 L 1112 472 Q 1120 472 1120 480"
+        stroke="#fbbf24"
+      />
+      <line
+        x1="216"
+        y1="480"
+        x2="216"
+        y2="528"
+        stroke="#fbbf24"
+        marker-end="url(#arrowhead-amber)"
+      />
+      <line
+        x1="532"
+        y1="472"
+        x2="532"
+        y2="528"
+        stroke="#fbbf24"
+        marker-end="url(#arrowhead-amber)"
+      />
+      <line
+        x1="868"
+        y1="472"
+        x2="868"
+        y2="528"
+        stroke="#fbbf24"
+        marker-end="url(#arrowhead-amber)"
+      />
+      <line
+        x1="1120"
+        y1="480"
+        x2="1120"
+        y2="528"
+        stroke="#fbbf24"
+        marker-end="url(#arrowhead-amber)"
+      />
+
+      <!-- External API → Browser Runtime -->
+      <line
+        x1="1276"
+        y1="428"
+        x2="1276"
+        y2="528"
+        stroke="#fb7185"
+        stroke-dasharray="5,4"
+        marker-end="url(#arrowhead-rose)"
+      />
+    </g>
+
+    <!-- Bus junction dots -->
+    <g fill="#fbbf24">
+      <circle cx="532" cy="472" r="2.75" />
+      <circle cx="868" cy="472" r="2.75" />
+      <circle cx="1061" cy="472" r="2.75" />
+    </g>
+
+    <!-- Arrow Annotations -->
+    <text x="458" y="196" fill="#94a3b8" font-size="7.5">MDAST → HAST</text>
+    <text x="450" y="339" fill="#34d399" font-size="7.5" text-anchor="middle">
+      siteConfig · base · features
+    </text>
+    <text x="1070" y="196" fill="#94a3b8" font-size="7.5">post-build</text>
+    <text x="1070" y="316" fill="#fbbf24" font-size="7.5">dist/ + pagefind/</text>
+    <text x="698" y="465" fill="#fbbf24" font-size="8" text-anchor="middle">
+      HTTPS · Static Delivery (HTML · CSS · JS · WOFF2 · pagefind/)
+    </text>
+    <text x="1266" y="465" fill="#fb7185" font-size="7.5" text-anchor="end">
+      v1.hitokoto.cn (cache miss)
+    </text>
+
+    <!-- ============================================================
+         SECTION HEADER PILLS
+         ============================================================ -->
+    <rect
+      x="20"
+      y="24"
+      width="148"
+      height="20"
+      rx="4"
+      fill="#0f172a"
+      stroke="#fbbf24"
+      stroke-width="1"
+    />
+    <text x="30" y="37.5" fill="#fbbf24" font-size="9" font-weight="600">
+      1. SOURCE &amp; CONFIG
+    </text>
+
+    <rect
+      x="315"
+      y="24"
+      width="196"
+      height="20"
+      rx="4"
+      fill="#0f172a"
+      stroke="#fbbf24"
+      stroke-width="1"
+    />
+    <text x="325" y="37.5" fill="#fbbf24" font-size="9" font-weight="600">
+      2. BUILD &amp; RENDER PIPELINE
+    </text>
+    <text x="894" y="38" fill="#fbbf24" font-size="8" text-anchor="end">
+      npm run build → astro build &amp;&amp; pagefind --site dist
+    </text>
+
+    <rect
+      x="940"
+      y="24"
+      width="204"
+      height="20"
+      rx="4"
+      fill="#0f172a"
+      stroke="#fbbf24"
+      stroke-width="1"
+    />
+    <text x="950" y="37.5" fill="#fbbf24" font-size="9" font-weight="600">
+      3. STATIC OUTPUT &amp; DELIVERY
+    </text>
+
+    <rect
+      x="20"
+      y="494"
+      width="156"
+      height="20"
+      rx="4"
+      fill="#0f172a"
+      stroke="#22d3ee"
+      stroke-width="1"
+    />
+    <text x="30" y="507.5" fill="#22d3ee" font-size="9" font-weight="600">
+      4. BROWSER RUNTIME
+    </text>
+
+    <!-- ============================================================
+         SECTION 1: SOURCE & CONFIG
+         ============================================================ -->
+    <rect x="36" y="64" width="233" height="104" rx="6" fill="#0f172a" />
+    <rect
+      x="36"
+      y="64"
+      width="233"
+      height="104"
+      rx="6"
+      fill="rgba(76, 29, 149, 0.4)"
+      stroke="#a78bfa"
+      stroke-width="1.5"
+    />
+    <text x="152.5" y="88" fill="white" font-size="11.5" font-weight="600" text-anchor="middle">
+      Content Posts
+    </text>
+    <text x="152.5" y="106" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      src/content/posts/ (.md · .mdx)
+    </text>
+    <text x="152.5" y="121" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      Content Collections · Zod Schema
+    </text>
+    <text x="152.5" y="139" fill="#a78bfa" font-size="7.5" text-anchor="middle">
+      pinned · draft · hidden · updated
+    </text>
+    <text x="152.5" y="153" fill="#a78bfa" font-size="7.5" text-anchor="middle">
+      13 Static Routes · Pagination · RSS
+    </text>
+
+    <rect x="36" y="208" width="233" height="84" rx="6" fill="#0f172a" />
+    <rect
+      x="36"
+      y="208"
+      width="233"
+      height="84"
+      rx="6"
+      fill="rgba(76, 29, 149, 0.35)"
+      stroke="#a78bfa"
+      stroke-width="1.5"
+    />
+    <text x="152.5" y="231" fill="white" font-size="11" font-weight="600" text-anchor="middle">
+      Status &amp; Local Assets
+    </text>
+    <text x="152.5" y="248" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      src/content/status/ · friends.ts
+    </text>
+    <text x="152.5" y="263" fill="#94a3b8" font-size="8" text-anchor="middle">
+      public/fonts/ (LXGW · Corinthia · JB)
+    </text>
+    <text x="152.5" y="279" fill="#a78bfa" font-size="7.5" text-anchor="middle">
+      WOFF2 Shards · Avatar SVG · rss.xsl
+    </text>
+
+    <rect x="36" y="332" width="233" height="96" rx="6" fill="#0f172a" />
+    <rect
+      x="36"
+      y="332"
+      width="233"
+      height="96"
+      rx="6"
+      fill="rgba(6, 78, 59, 0.4)"
+      stroke="#34d399"
+      stroke-width="1.5"
+    />
+    <text x="152.5" y="356" fill="white" font-size="11.5" font-weight="600" text-anchor="middle">
+      siteConfig
+    </text>
+    <text x="152.5" y="373" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      src/config.ts (@custom)
+    </text>
+    <text x="152.5" y="391" fill="#34d399" font-size="7.5" text-anchor="middle">
+      siteUrl · base · lang · timezone
+    </text>
+    <text x="152.5" y="406" fill="#34d399" font-size="7.5" text-anchor="middle">
+      nav · social · theme · hitokoto · flags
+    </text>
+
+    <!-- ============================================================
+         SECTION 2: BUILD & RENDER PIPELINE
+         ============================================================ -->
+    <rect x="335" y="64" width="230" height="110" rx="6" fill="#0f172a" />
+    <rect
+      x="335"
+      y="64"
+      width="230"
+      height="110"
+      rx="6"
+      fill="rgba(6, 78, 59, 0.4)"
+      stroke="#34d399"
+      stroke-width="1.5"
+    />
+    <text x="450" y="88" fill="white" font-size="11.5" font-weight="600" text-anchor="middle">
+      remark Pipeline
+    </text>
+    <text x="450" y="106" fill="#94a3b8" font-size="8" text-anchor="middle">
+      remark-directive · CalloutDirectives
+    </text>
+    <text x="450" y="121" fill="#94a3b8" font-size="8" text-anchor="middle">
+      remarkCallouts (Obsidian + Nested)
+    </text>
+    <text x="450" y="136" fill="#94a3b8" font-size="8" text-anchor="middle">
+      remark-math · katex/contrib/mhchem
+    </text>
+    <text x="450" y="156" fill="#34d399" font-size="7.5" text-anchor="middle">
+      Collapsible Callouts · LaTeX &amp; Chem
+    </text>
+
+    <rect x="335" y="214" width="230" height="110" rx="6" fill="#0f172a" />
+    <rect
+      x="335"
+      y="214"
+      width="230"
+      height="110"
+      rx="6"
+      fill="rgba(6, 78, 59, 0.4)"
+      stroke="#34d399"
+      stroke-width="1.5"
+    />
+    <text x="450" y="238" fill="white" font-size="11.5" font-weight="600" text-anchor="middle">
+      rehype + Shiki 4
+    </text>
+    <text x="450" y="256" fill="#94a3b8" font-size="8" text-anchor="middle">
+      rehype-katex · rehypeTableScroll
+    </text>
+    <text x="450" y="271" fill="#94a3b8" font-size="8" text-anchor="middle">
+      rehypeBaseUrls · rehypeFigures
+    </text>
+    <text x="450" y="286" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Shiki Dual-Theme + codeMeta
+    </text>
+    <text x="450" y="306" fill="#34d399" font-size="7.5" text-anchor="middle">
+      title · ln · {lines} · Build-time Math
+    </text>
+
+    <rect x="335" y="364" width="230" height="64" rx="6" fill="#0f172a" />
+    <rect
+      x="335"
+      y="364"
+      width="230"
+      height="64"
+      rx="6"
+      fill="rgba(8, 51, 68, 0.4)"
+      stroke="#22d3ee"
+      stroke-width="1.5"
+    />
+    <text x="450" y="386" fill="white" font-size="11" font-weight="600" text-anchor="middle">
+      Vite + Tailwind CSS v4
+    </text>
+    <text x="450" y="402" fill="#94a3b8" font-size="8" text-anchor="middle">
+      @tailwindcss/vite · CSS Custom Props
+    </text>
+    <text x="450" y="416" fill="#22d3ee" font-size="7" text-anchor="middle">
+      @components · @layouts · @utils · @styles
+    </text>
+
+    <rect x="615" y="64" width="275" height="220" rx="8" fill="#0f172a" />
+    <rect
+      x="615"
+      y="64"
+      width="275"
+      height="220"
+      rx="8"
+      fill="rgba(8, 51, 68, 0.48)"
+      stroke="#22d3ee"
+      stroke-width="2"
+    />
+    <text x="752.5" y="95" fill="white" font-size="13.5" font-weight="700" text-anchor="middle">
+      Astro 7 SSG
+    </text>
+    <text x="752.5" y="116" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      @astrojs/mdx · @astrojs/sitemap
+    </text>
+    <text x="752.5" y="133" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      @astrojs/rss · Content Collections
+    </text>
+    <text x="752.5" y="150" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      getStaticPaths · 13 Static Routes
+    </text>
+    <text x="752.5" y="167" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      Layout · Head (SEO / OG / JSON-LD)
+    </text>
+    <line x1="645" y1="182" x2="860" y2="182" stroke="#1e293b" stroke-width="1" />
+    <text x="752.5" y="201" fill="#22d3ee" font-size="8" text-anchor="middle">
+      ClientRouter (View Transitions)
+    </text>
+    <text x="752.5" y="218" fill="#22d3ee" font-size="8" text-anchor="middle">
+      prefetchAll (hover) · compressHTML
+    </text>
+    <text x="752.5" y="235" fill="#22d3ee" font-size="8" text-anchor="middle">
+      trailingSlash: always · base subpath
+    </text>
+    <text x="752.5" y="261" fill="#67e8f9" font-size="7.5" text-anchor="middle">
+      Astro 7.4 · TypeScript 6 · Node ≥ 22.22
+    </text>
+
+    <rect x="687.5" y="294" width="130" height="20" rx="4" fill="#0f172a" />
+    <rect
+      x="687.5"
+      y="294"
+      width="130"
+      height="20"
+      rx="4"
+      fill="rgba(251, 146, 60, 0.3)"
+      stroke="#fb923c"
+      stroke-width="1"
+    />
+    <text x="752.5" y="307" fill="#fb923c" font-size="7.5" font-weight="600" text-anchor="middle">
+      astro:build:done
+    </text>
+
+    <rect x="615" y="324" width="275" height="104" rx="6" fill="#0f172a" />
+    <rect
+      x="615"
+      y="324"
+      width="275"
+      height="104"
+      rx="6"
+      fill="rgba(6, 78, 59, 0.4)"
+      stroke="#34d399"
+      stroke-width="1.5"
+    />
+    <text x="752.5" y="347" fill="white" font-size="11.5" font-weight="600" text-anchor="middle">
+      Resource Delivery
+    </text>
+    <text x="752.5" y="364" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      scripts/resource-delivery.mjs
+    </text>
+    <text x="752.5" y="380" fill="#94a3b8" font-size="8" text-anchor="middle">
+      HarfBuzz Home WOFF2 · Per-page Font CSS
+    </text>
+    <text x="752.5" y="395" fill="#94a3b8" font-size="8" text-anchor="middle">
+      On-demand KaTeX CSS · Local img dims
+    </text>
+    <text x="752.5" y="413" fill="#34d399" font-size="7.5" text-anchor="middle">
+      sharp Responsive WebP Avatar (160–1280w)
+    </text>
+
+    <!-- ============================================================
+         SECTION 3: STATIC OUTPUT & DELIVERY
+         ============================================================ -->
+    <rect x="960" y="64" width="202" height="110" rx="7" fill="#0f172a" />
+    <rect
+      x="960"
+      y="64"
+      width="202"
+      height="110"
+      rx="7"
+      fill="rgba(120, 53, 15, 0.35)"
+      stroke="#fbbf24"
+      stroke-width="1.5"
+    />
+    <text x="1061" y="89" fill="white" font-size="12" font-weight="700" text-anchor="middle">
+      dist/ Output
+    </text>
+    <text x="1061" y="107" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      HTML · CSS · JS · _astro/
+    </text>
+    <text x="1061" y="122" fill="#94a3b8" font-size="8" text-anchor="middle">
+      WOFF2 Subsets · WebP · Assets
+    </text>
+    <text x="1061" y="137" fill="#94a3b8" font-size="8" text-anchor="middle">
+      rss.xml · sitemap-index.xml
+    </text>
+    <text x="1061" y="156" fill="#fbbf24" font-size="7.5" text-anchor="middle">
+      Fully Static · Root or Subpath
+    </text>
+
+    <rect x="960" y="214" width="202" height="80" rx="6" fill="#0f172a" />
+    <rect
+      x="960"
+      y="214"
+      width="202"
+      height="80"
+      rx="6"
+      fill="rgba(30, 41, 59, 0.5)"
+      stroke="#94a3b8"
+      stroke-width="1.5"
+    />
+    <text x="1061" y="237" fill="white" font-size="11" font-weight="600" text-anchor="middle">
+      Pagefind 1.5
+    </text>
+    <text x="1061" y="254" fill="#94a3b8" font-size="8.5" text-anchor="middle">
+      pagefind --site dist
+    </text>
+    <text x="1061" y="269" fill="#94a3b8" font-size="7.5" text-anchor="middle">
+      dist/pagefind/ · Excludes nav/footer
+    </text>
+    <text x="1061" y="283" fill="#cbd5e1" font-size="7" text-anchor="middle">
+      Static WASM Search Index
+    </text>
+
+    <rect x="960" y="334" width="202" height="94" rx="6" fill="#0f172a" />
+    <rect
+      x="960"
+      y="334"
+      width="202"
+      height="94"
+      rx="6"
+      fill="rgba(120, 53, 15, 0.3)"
+      stroke="#fbbf24"
+      stroke-width="1.5"
+    />
+    <text x="1061" y="358" fill="white" font-size="11.5" font-weight="600" text-anchor="middle">
+      Static Hosting
+    </text>
+    <text x="1061" y="376" fill="#94a3b8" font-size="8" text-anchor="middle">
+      GitHub Pages · Cloudflare Pages
+    </text>
+    <text x="1061" y="391" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Vercel · Netlify · Static CDN
+    </text>
+    <text x="1061" y="411" fill="#fbbf24" font-size="7.5" text-anchor="middle">
+      Serves Complete dist/ Directory
+    </text>
+
+    <rect x="1190" y="64" width="172" height="134" rx="6" fill="#0f172a" />
+    <rect
+      x="1190"
+      y="64"
+      width="172"
+      height="134"
+      rx="6"
+      fill="rgba(136, 19, 55, 0.4)"
+      stroke="#fb7185"
+      stroke-width="1.5"
+    />
+    <text x="1276" y="88" fill="white" font-size="11" font-weight="600" text-anchor="middle">
+      Verify &amp; Audit
+    </text>
+    <text x="1276" y="105" fill="#fb7185" font-size="8.5" text-anchor="middle">
+      npm run verify
+    </text>
+    <text x="1276" y="122" fill="#94a3b8" font-size="7.5" text-anchor="middle">
+      astro check · tsc · prettier
+    </text>
+    <text x="1276" y="137" fill="#94a3b8" font-size="7.5" text-anchor="middle">
+      node:test (5 test suites)
+    </text>
+    <text x="1276" y="152" fill="#94a3b8" font-size="7.5" text-anchor="middle">
+      check-build · check-subpath
+    </text>
+    <text x="1276" y="167" fill="#94a3b8" font-size="7.5" text-anchor="middle">
+      Links · Anchors · Fonts · RSS
+    </text>
+    <text x="1276" y="185" fill="#fb7185" font-size="7" text-anchor="middle">
+      Zero Broken Links / KaTeX Err
+    </text>
+
+    <rect x="1190" y="238" width="172" height="190" rx="6" fill="#0f172a" />
+    <rect
+      x="1190"
+      y="238"
+      width="172"
+      height="190"
+      rx="6"
+      fill="rgba(30, 41, 59, 0.5)"
+      stroke="#94a3b8"
+      stroke-width="1.5"
+    />
+    <text x="1276" y="264" fill="white" font-size="11" font-weight="600" text-anchor="middle">
+      External API
+    </text>
+    <text x="1276" y="280" fill="#94a3b8" font-size="8" text-anchor="middle">
+      &amp; Outbound Links
+    </text>
+    <line x1="1212" y1="292" x2="1340" y2="292" stroke="#1e293b" stroke-width="1" />
+    <text x="1276" y="311" fill="#e2e8f0" font-size="8.5" font-weight="500" text-anchor="middle">
+      Hitokoto API
+    </text>
+    <text x="1276" y="326" fill="#fb7185" font-size="8" text-anchor="middle">
+      v1.hitokoto.cn
+    </text>
+    <text x="1276" y="340" fill="#94a3b8" font-size="7" text-anchor="middle">
+      d · h · i · k · 4s / 1 retry
+    </text>
+    <line x1="1212" y1="353" x2="1340" y2="353" stroke="#1e293b" stroke-width="1" />
+    <text x="1276" y="372" fill="#94a3b8" font-size="8" text-anchor="middle">
+      GitHub · Bilibili
+    </text>
+    <text x="1276" y="387" fill="#94a3b8" font-size="8" text-anchor="middle">
+      X · Telegram · Email
+    </text>
+    <text x="1276" y="411" fill="#34d399" font-size="7" text-anchor="middle">
+      Zero 3rd-Party Font/CSS CDN
+    </text>
+
+    <!-- ============================================================
+         SECTION 4: BROWSER RUNTIME
+         ============================================================ -->
+    <rect x="38" y="530" width="316" height="226" rx="8" fill="#0f172a" />
+    <rect
+      x="38"
+      y="530"
+      width="316"
+      height="226"
+      rx="8"
+      fill="rgba(8, 51, 68, 0.35)"
+      stroke="#22d3ee"
+      stroke-width="1.5"
+    />
+    <text x="196" y="558" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">
+      Layout &amp; Navigation
+    </text>
+    <text x="196" y="574" fill="#67e8f9" font-size="7.5" text-anchor="middle">
+      20 Astro Components · 11 Client Scripts
+    </text>
+    <line x1="62" y1="585" x2="330" y2="585" stroke="#1e293b" stroke-width="1" />
+    <text x="196" y="606" fill="#cbd5e1" font-size="8" text-anchor="middle">
+      Layout.astro (Desktop 3-col ↔ Mobile Drawer)
+    </text>
+    <text x="196" y="625" fill="#94a3b8" font-size="8" text-anchor="middle">
+      ClientRouter (View Transitions) + Scroll Restore
+    </text>
+    <text x="196" y="644" fill="#94a3b8" font-size="8" text-anchor="middle">
+      lifecycle.ts (onPageLoad + AbortController)
+    </text>
+    <text x="196" y="663" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Header · Navbar · Footer · Breadcrumb · Icon
+    </text>
+    <text x="196" y="682" fill="#94a3b8" font-size="8" text-anchor="middle">
+      PostCard (List/Grid) · CategoryBar · Pagination
+    </text>
+    <text x="196" y="701" fill="#94a3b8" font-size="8" text-anchor="middle">
+      drawer-scroll.ts · tags.ts · friends.ts
+    </text>
+    <text x="196" y="734" fill="#22d3ee" font-size="7.5" text-anchor="middle">
+      FOUC Prevention · Accessible Keyboard Nav
+    </text>
+
+    <rect x="374" y="530" width="316" height="226" rx="8" fill="#0f172a" />
+    <rect
+      x="374"
+      y="530"
+      width="316"
+      height="226"
+      rx="8"
+      fill="rgba(8, 51, 68, 0.35)"
+      stroke="#22d3ee"
+      stroke-width="1.5"
+    />
+    <text x="532" y="558" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">
+      Reading &amp; Content UX
+    </text>
+    <text x="532" y="574" fill="#67e8f9" font-size="7.5" text-anchor="middle">
+      Prose Enhancements · Scoped to Content
+    </text>
+    <line x1="398" y1="585" x2="666" y2="585" stroke="#1e293b" stroke-width="1" />
+    <text x="532" y="606" fill="#cbd5e1" font-size="8" text-anchor="middle">
+      TOC.astro + toc.ts (Sidebar + Mobile FAB)
+    </text>
+    <text x="532" y="625" fill="#94a3b8" font-size="8" text-anchor="middle">
+      CodeCopyButton (Copy · Filename · 14L Collapse)
+    </text>
+    <text x="532" y="644" fill="#94a3b8" font-size="8" text-anchor="middle">
+      ImageLightbox.astro (Zoom · Caption · Esc)
+    </text>
+    <text x="532" y="663" fill="#94a3b8" font-size="8" text-anchor="middle">
+      footnotes.ts (Anchor Jump &amp; Highlight)
+    </text>
+    <text x="532" y="682" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Tabs / Tab (MDX Switcher · No-JS Fallback)
+    </text>
+    <text x="532" y="701" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Obsidian Callouts · &lt;details&gt; · Wide Table Scroll
+    </text>
+    <text x="532" y="734" fill="#22d3ee" font-size="7.5" text-anchor="middle">
+      Zero Runtime Math JS (Pre-rendered KaTeX)
+    </text>
+
+    <rect x="710" y="530" width="316" height="226" rx="8" fill="#0f172a" />
+    <rect
+      x="710"
+      y="530"
+      width="316"
+      height="226"
+      rx="8"
+      fill="rgba(8, 51, 68, 0.35)"
+      stroke="#22d3ee"
+      stroke-width="1.5"
+    />
+    <text x="868" y="558" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">
+      Local Search &amp; Fonts
+    </text>
+    <text x="868" y="574" fill="#67e8f9" font-size="7.5" text-anchor="middle">
+      On-demand Static Assets · Zero External CDN
+    </text>
+    <line x1="734" y1="585" x2="1002" y2="585" stroke="#1e293b" stroke-width="1" />
+    <text x="868" y="606" fill="#cbd5e1" font-size="8" text-anchor="middle">
+      SearchModal.astro + search.ts (Ctrl/Cmd + K)
+    </text>
+    <text x="868" y="625" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Pagefind Local WASM Query (Lazy pagefind/)
+    </text>
+    <text x="868" y="644" fill="#94a3b8" font-size="8" text-anchor="middle">
+      font-loading.ts (Home Subset + Lazy Full Map)
+    </text>
+    <text x="868" y="663" fill="#94a3b8" font-size="8" text-anchor="middle">
+      LXGW WenKai WOFF2 + unicode-range Shards
+    </text>
+    <text x="868" y="682" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Corinthia Metric Aliases · JetBrains Mono
+    </text>
+    <text x="868" y="701" fill="#94a3b8" font-size="8" text-anchor="middle">
+      &lt;noscript&gt; Full CSS · Preload Critical Fonts
+    </text>
+    <text x="868" y="734" fill="#22d3ee" font-size="7.5" text-anchor="middle">
+      Cross-Page Cache · Dynamic Text Font Prep
+    </text>
+
+    <rect x="1046" y="530" width="316" height="226" rx="8" fill="#0f172a" />
+    <rect
+      x="1046"
+      y="530"
+      width="316"
+      height="226"
+      rx="8"
+      fill="rgba(8, 51, 68, 0.35)"
+      stroke="#22d3ee"
+      stroke-width="1.5"
+    />
+    <text x="1204" y="558" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">
+      Theme, Hitokoto &amp; State
+    </text>
+    <text x="1204" y="574" fill="#67e8f9" font-size="7.5" text-anchor="middle">
+      localStorage · Timezone Cache · SEO Meta
+    </text>
+    <line x1="1070" y1="585" x2="1338" y2="585" stroke="#1e293b" stroke-width="1" />
+    <text x="1204" y="606" fill="#cbd5e1" font-size="8" text-anchor="middle">
+      ThemeButton + theme.ts (auto / light / dark)
+    </text>
+    <text x="1204" y="625" fill="#94a3b8" font-size="8" text-anchor="middle">
+      TypewriterText + typewriter.ts (Banner)
+    </text>
+    <text x="1204" y="644" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Hitokoto.astro + hitokoto.ts (Daily Quote)
+    </text>
+    <text x="1204" y="663" fill="#94a3b8" font-size="8" text-anchor="middle">
+      localStorage Cache (Asia/Shanghai Daily Key)
+    </text>
+    <text x="1204" y="682" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Viewport-Safe Swap · Built-in Fallback Quote
+    </text>
+    <text x="1204" y="701" fill="#94a3b8" font-size="8" text-anchor="middle">
+      Head.astro (Canonical · OG · JSON-LD · Privacy)
+    </text>
+    <text x="1204" y="734" fill="#22d3ee" font-size="7.5" text-anchor="middle">
+      Offline-Resilient · Reduced-Motion Aware
+    </text>
+
+    <!-- ============================================================
+         LEGEND
+         ============================================================ -->
+    <rect
+      x="20"
+      y="798"
+      width="1360"
+      height="42"
+      rx="6"
+      fill="#0f172a"
+      stroke="#1e293b"
+      stroke-width="1"
+    />
+    <text x="40" y="823" fill="white" font-size="9.5" font-weight="600">Legend</text>
+    <line x1="96" y1="809" x2="96" y2="829" stroke="#1e293b" stroke-width="1" />
+
+    <rect
+      x="116"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="rgba(8, 51, 68, 0.45)"
+      stroke="#22d3ee"
+      stroke-width="1.2"
+    />
+    <text x="137" y="822.5" fill="#94a3b8" font-size="8">Frontend / SSG / Runtime</text>
+
+    <rect
+      x="298"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="rgba(6, 78, 59, 0.4)"
+      stroke="#34d399"
+      stroke-width="1.2"
+    />
+    <text x="319" y="822.5" fill="#94a3b8" font-size="8">Processing / Config</text>
+
+    <rect
+      x="454"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="rgba(76, 29, 149, 0.4)"
+      stroke="#a78bfa"
+      stroke-width="1.2"
+    />
+    <text x="475" y="822.5" fill="#94a3b8" font-size="8">Content / Data</text>
+
+    <rect
+      x="586"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="rgba(120, 53, 15, 0.35)"
+      stroke="#fbbf24"
+      stroke-width="1.2"
+    />
+    <text x="607" y="822.5" fill="#94a3b8" font-size="8">Output / Hosting</text>
+
+    <rect
+      x="728"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="rgba(251, 146, 60, 0.3)"
+      stroke="#fb923c"
+      stroke-width="1.2"
+    />
+    <text x="749" y="822.5" fill="#94a3b8" font-size="8">Build Hook</text>
+
+    <rect
+      x="840"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="rgba(136, 19, 55, 0.4)"
+      stroke="#fb7185"
+      stroke-width="1.2"
+    />
+    <text x="861" y="822.5" fill="#94a3b8" font-size="8">Verify / Audit</text>
+
+    <rect
+      x="972"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="rgba(30, 41, 59, 0.5)"
+      stroke="#94a3b8"
+      stroke-width="1.2"
+    />
+    <text x="993" y="822.5" fill="#94a3b8" font-size="8">Tools / External</text>
+
+    <line
+      x1="1112"
+      y1="819"
+      x2="1132"
+      y2="819"
+      stroke="#fb7185"
+      stroke-width="1.5"
+      stroke-dasharray="4,3"
+    />
+    <text x="1140" y="822.5" fill="#94a3b8" font-size="8">API / Audit Flow</text>
+
+    <rect
+      x="1256"
+      y="814"
+      width="14"
+      height="10"
+      rx="2"
+      fill="transparent"
+      stroke="#fbbf24"
+      stroke-width="1.2"
+      stroke-dasharray="3,2"
+    />
+    <text x="1277" y="822.5" fill="#94a3b8" font-size="8">Stage Boundary</text>
+  </g>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title">
+  <title id="title">暮色中的层叠山峦与落日插画</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f3f63" />
+      <stop offset="0.45" stop-color="#7d6a83" />
+      <stop offset="0.72" stop-color="#d9a06f" />
+      <stop offset="1" stop-color="#f7eedd" />
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe6b0" />
+      <stop offset="1" stop-color="#f2a65a" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffdca8" stop-opacity="0.85" />
+      <stop offset="1" stop-color="#ffdca8" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#sky)" />
+  <circle cx="780" cy="430" r="190" fill="url(#glow)" />
+  <circle cx="780" cy="430" r="78" fill="url(#sun)" />
+
+  <g fill="#ffffff" opacity="0.75">
+    <circle cx="180" cy="120" r="2.4" />
+    <circle cx="320" cy="72" r="1.8" />
+    <circle cx="470" cy="140" r="2" />
+    <circle cx="620" cy="88" r="1.5" />
+    <circle cx="980" cy="96" r="2.2" />
+    <circle cx="1090" cy="170" r="1.6" />
+    <circle cx="240" cy="220" r="1.4" />
+    <circle cx="880" cy="200" r="1.7" />
+  </g>
+
+  <path d="M0 520 L170 400 L320 500 L470 380 L640 520 L800 430 L980 520 L1200 420 L1200 675 L0 675 Z" fill="#4d4a63" opacity="0.85" />
+  <path d="M0 580 L150 490 L310 570 L500 460 L680 580 L860 500 L1040 585 L1200 510 L1200 675 L0 675 Z" fill="#363a52" />
+  <path d="M0 630 L220 560 L400 620 L620 545 L820 625 L1010 570 L1200 620 L1200 675 L0 675 Z" fill="#242a3d" />
+
+  <g fill="none" stroke="#f7eedd" stroke-width="3" opacity="0.35">
+    <path d="M900 300 q18 -20 36 0" />
+    <path d="M960 342 q14 -16 28 0" />
+  </g>
+</svg>

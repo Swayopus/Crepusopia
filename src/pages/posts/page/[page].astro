@@ -1,0 +1,60 @@
+---
+// @page /posts/page/:page — 文章列表分页（第 2 页起），每页 10 篇，含分类筛选栏与分页导航
+import type { GetStaticPaths, Page } from "astro";
+import type { Post } from "@utils/content";
+interface Props {
+  page: Page<Post>;
+}
+import { siteConfig } from "@/config";
+import Layout from "@layouts/Layout.astro";
+import { getSortedPosts, getCategories } from "@utils/content";
+import PostCard from "@components/PostCard.astro";
+import CategoryBar from "@components/CategoryBar.astro";
+import Pagination from "@components/Pagination.astro";
+
+/**
+ * 使用 Astro 内置 paginate() 为所有非草稿/非隐藏文章生成分页路径。
+ */
+export const getStaticPaths = (async ({ paginate }) => {
+  const sorted = await getSortedPosts();
+  return paginate(sorted, { pageSize: siteConfig.postList.postsPerPage }).filter(
+    (route) => route.props.page.currentPage > 1,
+  );
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+const posts = page.data;
+
+// 获取分类列表
+const cats = await getCategories();
+---
+
+<Layout title={`Posts · Page ${page.currentPage}`}>
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题：当前页码 / 总页数 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">
+      文章
+      <span
+        class="text-base text-[var(--color-text-muted)] font-normal ml-2"
+        style="font-family: var(--font-nav)"
+        >第 {page.currentPage} 页 · 共 {page.lastPage} 页</span
+      >
+    </h1>
+
+    {/* 分类筛选栏 */}
+    {cats.length > 0 && <CategoryBar categories={cats} />}
+
+    {/* ===== 文章列表 ===== */}
+    <div
+      class={
+        siteConfig.postList.defaultLayout === "grid" ? "grid sm:grid-cols-2 gap-4" : "flex flex-col"
+      }
+    >
+      {posts.map((p) => (
+        <PostCard post={p} />
+      ))}
+    </div>
+
+    <Pagination currentPage={page.currentPage} totalPages={page.lastPage} />
+  </div>
+</Layout>

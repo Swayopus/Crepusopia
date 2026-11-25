@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.npm-cache/
+package-lock.json
+public/
+src/content/
+# 离线字体工具生成；与 public/fonts/ 中的 CSS 共用字符范围。
+src/styles/font-subsets.css

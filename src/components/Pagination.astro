@@ -1,0 +1,30 @@
+---
+import { withBase } from "@utils/url";
+
+interface Props {
+  currentPage: number;
+  totalPages: number;
+}
+
+const { currentPage, totalPages } = Astro.props;
+// 第一页只有 /posts/ 一个地址，避免与 /posts/page/1/ 重复。
+const pageUrl = (page: number) => withBase(page === 1 ? "/posts/" : `/posts/page/${page}/`);
+const buttonClass =
+  "px-3 py-1.5 rounded-lg text-base leading-snug transition-colors bg-[var(--color-bg-alt)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)]";
+---
+
+{totalPages > 1 && <nav
+  aria-label="文章分页"
+  class="flex items-center justify-center gap-2 mt-10 pt-6 border-t border-[var(--color-border)]"
+>
+  {currentPage > 1 && <a href={pageUrl(currentPage - 1)} class={buttonClass}>← 上一页</a>}
+  {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => <a
+    href={pageUrl(page)}
+    class={buttonClass}
+    aria-current={page === currentPage ? "page" : undefined}
+    style={page === currentPage ? "background:var(--color-text);color:var(--color-bg)" : ""}
+  >
+    {page}
+  </a>)}
+  {currentPage < totalPages && <a href={pageUrl(currentPage + 1)} class={buttonClass}>下一页 →</a>}
+</nav>}

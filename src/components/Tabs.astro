@@ -1,0 +1,84 @@
+---
+// @component Tabs — 内容切换容器。面板由 Tab 子组件提供。
+// 无脚本时所有面板按顺序展示并自带标题；脚本接管后生成可键盘操作的 tablist。
+interface Props {
+  /** 整组标签的无障碍名称。 */
+  label?: string;
+}
+
+const { label = "内容切换" } = Astro.props;
+---
+
+<div class="content-tabs" data-tabs data-tabs-label={label}>
+  <slot />
+</div>
+
+<script>
+  import { onPageLoad } from "@/scripts/lifecycle";
+
+  let groupCounter = 0;
+
+  function enhanceTabs(wrapper: HTMLElement) {
+    if (wrapper.dataset.tabsReady === "true") return;
+
+    const panels = Array.from(wrapper.querySelectorAll<HTMLElement>(":scope > .tab-panel"));
+    if (panels.length < 2) return;
+
+    groupCounter += 1;
+    const group = `content-tabs-${groupCounter}`;
+    const list = document.createElement("div");
+    list.setAttribute("role", "tablist");
+    list.setAttribute("aria-label", wrapper.dataset.tabsLabel || "内容切换");
+    const tabs: HTMLButtonElement[] = [];
+
+    function activate(activeIndex: number, moveFocus: boolean) {
+      tabs.forEach((tab, index) => {
+        const selected = index === activeIndex;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        panels[index].hidden = !selected;
+      });
+      if (moveFocus) tabs[activeIndex].focus();
+    }
+
+    panels.forEach((panel, index) => {
+      const tabId = `${group}-tab-${index}`;
+      const panelId = `${group}-panel-${index}`;
+      panel.id = panelId;
+      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute("aria-labelledby", tabId);
+
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.id = tabId;
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-controls", panelId);
+      tab.textContent = panel.dataset.tabLabel?.trim() || `选项 ${index + 1}`;
+      tab.tabIndex = -1;
+
+      tab.addEventListener("click", () => activate(index, false));
+      tab.addEventListener("keydown", (event) => {
+        let next: number | undefined;
+        if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+        else if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+        else if (event.key === "Home") next = 0;
+        else if (event.key === "End") next = tabs.length - 1;
+        if (next === undefined) return;
+        event.preventDefault();
+        // 左右方向键同时移动焦点并切换，符合 WAI-ARIA 的自动激活模式。
+        activate(next, true);
+      });
+
+      list.appendChild(tab);
+      tabs.push(tab);
+    });
+
+    wrapper.insertBefore(list, panels[0]);
+    activate(0, false);
+    wrapper.dataset.tabsReady = "true";
+  }
+
+  onPageLoad(() => {
+    document.querySelectorAll<HTMLElement>("[data-tabs]").forEach(enhanceTabs);
+  });
+</script>

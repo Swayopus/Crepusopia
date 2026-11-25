@@ -1,0 +1,48 @@
+---
+// @component Hitokoto — 一言组件，每日从 hitokoto.cn 获取一句话，按天缓存在 localStorage 中；API 不可用时回退到内置名言
+import { siteConfig } from "@/config";
+---
+
+{/* 内置句子也是无网络时的内容；独立客户端模块负责更新。 */}
+<div class="hitokoto-block border-l-[3px] border-[var(--color-primary)] pl-4 py-1 mb-3">
+  <p class="hitokoto-text text-base text-[var(--color-text)]/80 leading-relaxed italic">
+    "Simplicity is the ultimate sophistication."
+  </p>
+  <footer class="hitokoto-footer text-sm text-[var(--color-text-muted)] mt-1">
+    —— Leonardo da Vinci
+  </footer>
+</div>
+
+{/* 缓存内容在首次绘制前恢复，避免延迟模块启动后把一行替换成多行。
+    换页时也重新执行；无 JS 或存储不可用时，保留上面的内置句子。 */}
+<script
+  is:inline
+  data-astro-rerun
+  define:vars={{ timezone: siteConfig.timezone, allowedTypes: siteConfig.hitokoto.categories }}
+>
+  (() => {
+    const block = document.currentScript.previousElementSibling;
+    try {
+      const date = new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
+      const cache = JSON.parse(localStorage.getItem("hitokoto_cache") ?? "null");
+      // 旧缓存没有分类，或分类不再启用时，保留内置句子并交给客户端重新请求。
+      if (
+        cache?.date !== date ||
+        typeof cache.text !== "string" ||
+        !cache.text.trim() ||
+        !allowedTypes.includes(cache.type)
+      )
+        return;
+      const from = typeof cache.from === "string" ? cache.from : "";
+      const author = typeof cache.fromWho === "string" ? cache.fromWho : "";
+      block.querySelector(".hitokoto-text").textContent = `"${cache.text}"`;
+      block.querySelector(".hitokoto-footer").textContent =
+        `—— ${from}${author ? `(${author})` : ""}`;
+      block.dataset.cacheDate = date;
+    } catch {}
+  })();
+</script>
+
+<script>
+  import "@/scripts/hitokoto";
+</script>

@@ -1,0 +1,290 @@
+---
+// @component ImageLightbox — 正文图片点击后的放大预览。
+// 使用原生 <dialog> 获得焦点陷阱、Esc 关闭与关闭后的焦点恢复。
+import Icon from "@components/Icon.astro";
+---
+
+<dialog id="image-lightbox" class="image-lightbox" aria-label="图片预览">
+  <div class="image-lightbox-body">
+    <div class="image-lightbox-media">
+      <img class="image-lightbox-image" alt="" />
+      <button type="button" class="image-lightbox-close" aria-label="关闭预览">
+        <Icon name="close" size={20} />
+      </button>
+    </div>
+    <p class="image-lightbox-caption" hidden></p>
+  </div>
+</dialog>
+
+<style is:global>
+  .image-lightbox {
+    position: fixed;
+    inset: 0;
+    width: min(92vw, 1400px);
+    height: fit-content;
+    /* body zoom 同时影响宽高，手动放大后也要把灯箱限制在可见视口内。 */
+    max-width: calc(92vw / var(--page-scale, 1));
+    max-height: 92vh;
+    /* 桌面模式 body 会缩放；除以缩放比例才能让灯箱仍占视口约 92%。 */
+    max-height: calc(92vh / var(--page-scale, 1));
+    /* Tailwind preflight 会把 dialog 的 margin 清零，这里显式恢复居中。 */
+    margin: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #f5f1e8;
+    overflow: visible;
+  }
+
+  .image-lightbox::backdrop {
+    background: rgba(0, 0, 0, 0.74);
+  }
+
+  /* 图片和关闭按钮一起缩放，按钮始终相对图片定位，不在动画结束时切换基准。 */
+  .image-lightbox[open] {
+    animation: image-lightbox-fade-in 0.18s ease-out;
+  }
+
+  .image-lightbox[open] .image-lightbox-body {
+    animation: image-lightbox-in 0.18s ease-out;
+  }
+
+  @keyframes image-lightbox-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes image-lightbox-in {
+    from {
+      transform: scale(0.98);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  .image-lightbox-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 1rem;
+  }
+
+  .image-lightbox-media {
+    position: relative;
+    width: 100%;
+    /* 放大图是交互控件；避免双击留下图片选区，重开后被浏览器的选中色蒙暗。 */
+    -webkit-user-select: none;
+    user-select: none;
+    /* 按图片比例收紧留白，竖图的关闭按钮也贴着真实图片，而非整块弹窗。 */
+    max-width: calc(82vh / var(--page-scale, 1) * var(--lightbox-aspect, 1));
+    aspect-ratio: var(--lightbox-aspect, 1);
+  }
+
+  .image-lightbox-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 82vh;
+    max-height: calc(82vh / var(--page-scale, 1));
+    object-fit: contain;
+    border-radius: 8px;
+    /* 不叠加主题底色，避免浅色底经圆角抗锯齿混色后露出细亮边。 */
+    background: transparent;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  }
+
+  .image-lightbox-caption {
+    max-width: min(92vw, 900px);
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: center;
+    color: #f5f1e8;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+
+  .image-lightbox-caption[hidden] {
+    display: none;
+  }
+
+  .image-lightbox-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 图标和透明点击范围一起随字号/整页缩放，不再用固定像素下限撑大手机按钮。 */
+    font-size: 1.125rem;
+    width: 1.5em;
+    height: 1.5em;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    transition:
+      opacity 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .image-lightbox-close svg {
+    width: 1em;
+    height: 1em;
+    /* 只给 × 的线条加细阴影，白图上也可辨认；em 随图标一起缩放。 */
+    filter: drop-shadow(0 0 0.05em #000) drop-shadow(0 0 0.05em #000);
+  }
+
+  @media (max-width: 640px), (pointer: coarse) {
+    .image-lightbox-close {
+      font-size: 0.9375rem;
+    }
+  }
+
+  /* 触屏默认常显；鼠标设备仅在悬停图片或键盘聚焦关闭按钮时显示。 */
+  @media (hover: hover) and (pointer: fine) {
+    .image-lightbox-close {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .image-lightbox-media:hover .image-lightbox-close,
+    .image-lightbox-close:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  .image-lightbox-close:focus-visible {
+    /* 键盘焦点通过 × 本身变色提示，不绘制额外的圈或底色。 */
+    outline: none;
+    color: var(--color-primary);
+  }
+
+  /* 用户要求减少动态效果时，关闭灯箱的淡入与缩放动画。 */
+  @media (prefers-reduced-motion: reduce) {
+    .image-lightbox[open],
+    .image-lightbox[open] .image-lightbox-body {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { onPageLoad } from "@/scripts/lifecycle";
+
+  onPageLoad((signal) => {
+    const dialog = document.getElementById("image-lightbox") as HTMLDialogElement | null;
+    const image = dialog?.querySelector<HTMLImageElement>(".image-lightbox-image");
+    const media = dialog?.querySelector<HTMLElement>(".image-lightbox-media");
+    const caption = dialog?.querySelector<HTMLElement>(".image-lightbox-caption");
+    if (!dialog || !image || !media || !caption) return;
+
+    let scrollLock: AbortController | undefined;
+
+    function syncImageAspect(source: HTMLImageElement) {
+      if (source.naturalWidth && source.naturalHeight)
+        media!.style.setProperty(
+          "--lightbox-aspect",
+          String(source.naturalWidth / source.naturalHeight),
+        );
+    }
+    image.addEventListener("load", () => syncImageAspect(image), { signal });
+
+    function unlockScroll() {
+      scrollLock?.abort();
+      scrollLock = undefined;
+    }
+
+    function lockScroll() {
+      unlockScroll();
+      const controller = new AbortController();
+      scrollLock = controller;
+      const { signal: lockSignal } = controller;
+      const block = (event: Event) => event.preventDefault();
+
+      window.addEventListener(
+        "wheel",
+        (event) => {
+          // 保留 Ctrl+滚轮的浏览器缩放，只拦截背景滚动。
+          if (!event.ctrlKey) event.preventDefault();
+        },
+        { passive: false, signal: lockSignal },
+      );
+      window.addEventListener("touchmove", block, { passive: false, signal: lockSignal });
+      // 方向键和翻页键会滚动根容器；空格留给聚焦中的关闭按钮。
+      window.addEventListener(
+        "keydown",
+        (event) => {
+          if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(event.key)) {
+            event.preventDefault();
+          }
+        },
+        { signal: lockSignal },
+      );
+    }
+
+    function openPreview(trigger: HTMLElement) {
+      if (dialog!.open) return;
+      const figure = trigger.closest("figure");
+      const figureImage = trigger.querySelector("img");
+      const source = figureImage?.currentSrc || figureImage?.src || "";
+      if (!source) return;
+
+      const text = figure?.querySelector("figcaption")?.textContent?.trim() ?? "";
+      media!.style.removeProperty("--lightbox-aspect");
+      if (figureImage) syncImageAspect(figureImage);
+      image!.src = source;
+      image!.alt = figureImage?.alt || text;
+      caption!.textContent = text;
+      caption!.hidden = !text;
+
+      dialog!.showModal();
+      lockScroll();
+    }
+
+    // 正文里的放大按钮由 rehype 生成；委托监听可覆盖换页后的新内容。
+    document.addEventListener(
+      "click",
+      (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const trigger = target.closest<HTMLElement>(".prose-figure-zoom");
+        if (trigger) openPreview(trigger);
+        // 打开时第二击可能落到新出现的遮罩，不能把同一次双击误当成关闭操作。
+        else if (target === dialog && event.detail < 2) dialog.close();
+      },
+      { signal },
+    );
+
+    dialog.querySelector(".image-lightbox-close")?.addEventListener("click", () => dialog.close(), {
+      signal,
+    });
+
+    dialog.addEventListener(
+      "close",
+      () => {
+        unlockScroll();
+        image.removeAttribute("src");
+        media.style.removeProperty("--lightbox-aspect");
+        caption.textContent = "";
+        caption.hidden = true;
+      },
+      { signal },
+    );
+
+    // 换页会先卸载监听，不能依赖旧 dialog 随后的 close 事件释放输入锁。
+    return () => {
+      unlockScroll();
+      if (dialog.open) dialog.close();
+    };
+  });
+</script>

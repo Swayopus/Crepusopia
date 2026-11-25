@@ -1,0 +1,13 @@
+---
+// @component Tab — Tabs 的单个面板，标签文字同时用于脚本生成的按钮。
+interface Props {
+  /** 标签按钮文字。 */
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<div class="tab-panel" data-tab-label={label}>
+  <slot />
+</div>

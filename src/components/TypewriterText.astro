@@ -1,0 +1,52 @@
+---
+// @component TypewriterText — 打字机动画组件，逐行打字/删除文本
+// @custom — typingSpeed (40), deletingSpeed (20), pauseDuration (5000): 控制动画速度
+// @custom — once (true): 为 true 时打完所有行后停在最后一行；为 false 时循环播放
+interface Props {
+  lines: readonly string[];
+  typingSpeed?: number;
+  deletingSpeed?: number;
+  pauseDuration?: number;
+  once?: boolean;
+}
+
+const {
+  lines = [],
+  typingSpeed = 40,
+  deletingSpeed = 20,
+  pauseDuration = 5000,
+  once = true,
+} = Astro.props;
+
+// 将 lines 数组编码为 URI 组件，通过 data 属性安全传递到客户端
+const encodedLines = encodeURIComponent(JSON.stringify(lines));
+---
+
+{/* 仅当有文本行时渲染 */}
+{lines.length > 0 && <span
+  id="typewriter"
+  class="block"
+  data-cursor="1"
+  data-lines={encodedLines}
+  data-typing-speed={typingSpeed}
+  data-deleting-speed={deletingSpeed}
+  data-pause-duration={pauseDuration}
+  data-once={once ? "1" : "0"}
+>
+  {/* 文本容器 — 初始为空行占位 */}
+  <span id="typewriter-text">
+    &nbsp;
+    <br />
+    &nbsp;
+  </span>
+</span>}
+
+{/*
+  打字机引擎（生命周期由独立模块管理）。
+  - once 模式：逐行完整打出，打完一行后移动到下一行，最后一行打完即停止。
+  - loop 模式：打出一行 → 暂停 → 删除 → 移动到下一行（轮播）。
+  - astro:page-load 初始化，换页前清理旧计时器。
+*/}
+<script>
+  import "@/scripts/typewriter";
+</script>

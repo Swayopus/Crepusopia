@@ -1,0 +1,173 @@
+---
+import Icon from "@components/Icon.astro";
+// @page /friends — 友链页面：友链卡片展示、本站信息复制、邮件/GitHub 申请入口
+import Layout from "@layouts/Layout.astro";
+import { siteConfig } from "@/config";
+import { friends } from "@data/friends";
+import { absoluteUrl, withBase } from "@utils/url";
+
+// 构建本站信息对象，用于"交换友链"区域展示
+const myInfo = {
+  name: siteConfig.title,
+  desc: siteConfig.description,
+  // 子目录部署时站点入口需要包含 base，不能只复制域名根地址。
+  link: absoluteUrl("/"),
+  avatar: absoluteUrl(siteConfig.avatar),
+  rss: absoluteUrl("/rss.xml"),
+};
+
+// 复制面板中逐行展示的键值对
+const myInfoItems = [
+  { label: "Name", value: myInfo.name },
+  { label: "Desc", value: myInfo.desc },
+  { label: "Link", value: myInfo.link },
+  { label: "Avatar", value: myInfo.avatar },
+  { label: "RSS", value: myInfo.rss },
+];
+
+// 预先拼接文本，供"一键复制全部"按钮使用
+const myInfoText = myInfoItems.map((i) => `${i.label}: ${i.value}`).join("\n");
+---
+
+<Layout title="Friends">
+  <div class="pt-2 lg:pt-0">
+    {/* ===== 页面标题与说明 ===== */}
+    <h1 class="text-2xl font-semibold text-[var(--color-text)] mb-6">友链</h1>
+    <p class="text-base text-[var(--color-text-muted)] leading-snug mb-8 max-w-lg">
+      这里是一些我经常访问的朋友和他们的博客。欢迎交换友链！
+    </p>
+
+    {/* ===== 友链卡片网格 ===== */}
+    {friends.length > 0 ? (
+      <div class="grid gap-3 sm:grid-cols-2 mb-10">
+        {friends.map((f) => <a
+          href={f.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-4 p-4 rounded-xl border border-[var(--color-card-border)]
+                   bg-[var(--color-card-bg)] hover:border-[var(--color-primary)]/30 hover:shadow-sm
+                   transition-all duration-300 group"
+        >
+          <img
+            src={withBase(f.avatar || siteConfig.avatar)}
+            alt={f.name}
+            class="w-12 h-12 rounded-xl object-cover flex-shrink-0
+                     border border-[var(--color-border)] group-hover:border-[var(--color-primary)]/30
+                     transition-all duration-300"
+            loading="lazy"
+            width="48"
+            height="48"
+          />
+          <div class="min-w-0 flex-1">
+            <div
+              class="text-base font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors leading-snug"
+            >
+              {f.name}
+            </div>
+            {f.desc && <div
+              class="text-base text-[var(--color-text-muted)] truncate leading-snug mt-0.5"
+            >
+              {f.desc}
+            </div>}
+          </div>
+        </a>)}
+      </div>
+    ) : (
+      /* 空状态：尚无友链 */
+      <div class="py-16 text-center mb-10">
+        <p class="text-base text-[var(--color-text-muted)] leading-snug">
+          暂无友链，欢迎交换友链。
+        </p>
+      </div>
+    )}
+
+    {/* ===== 申请交换区域：本站信息 + 复制按钮 + 申请入口 ===== */}
+    <div class="border border-[var(--color-card-border)] rounded-xl p-4 bg-[var(--color-card-bg)]">
+      <h2 class="text-lg font-semibold text-[var(--color-text)] mb-1 leading-snug">申请友链</h2>
+      <p class="text-sm text-[var(--color-text-muted)] leading-snug mb-3">
+        可以通过邮件、GitHub Issue
+        提交申请。申请时请提供：网站名称、地址（https://）、简介、头像（可选）。
+      </p>
+
+      {/* 本站友链信息卡 + 一键复制 */}
+      <div
+        class="mb-3 p-3 rounded-xl border border-[var(--color-primary)]/20
+                  bg-[var(--color-card-bg)]"
+      >
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <h3 class="text-lg font-semibold text-[var(--color-text)] leading-snug">本站友链信息</h3>
+          <button
+            type="button"
+            class="copy-all-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                   bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                   hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                   transition-colors text-base leading-snug"
+            data-copy={myInfoText}
+          >
+            <span class="copy-label">Copy All</span>
+          </button>
+        </div>
+        <p class="text-base text-[var(--color-text-muted)]/60 leading-snug mb-2">
+          点击 Copy All 一键复制，或逐行点击 Copy 单条复制。
+        </p>
+        {/* 逐行复制按钮 */}
+        <div class="grid gap-1">
+          {myInfoItems.map((item) => <button
+            type="button"
+            class="copy-row group w-full grid items-center gap-2 py-1.5 px-3
+                     rounded-lg bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                     text-left"
+            style="grid-template-columns: 64px 1fr auto"
+            data-copy={`${item.label}: ${item.value}`}
+          >
+            <span class="text-base text-[var(--color-text-muted)]/60 leading-snug">
+              {item.label}
+            </span>
+            <span class="text-base text-[var(--color-text)] truncate leading-snug">
+              {item.value}
+            </span>
+            <span
+              class="copy-pill text-base leading-snug px-1.5 py-0.5 rounded
+                           bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                           group-hover:bg-[var(--color-border)] group-hover:text-[var(--color-text)]
+                           transition-colors flex-shrink-0"
+            >
+              Copy
+            </span>
+          </button>)}
+        </div>
+      </div>
+
+      {/* 申请方式按钮：邮件 / GitHub Issue */}
+      <div class="flex flex-wrap gap-2 mb-3">
+        <a
+          href={`mailto:${siteConfig.email}`}
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 transition-colors text-base leading-snug"
+        >
+          <Icon name="email" size={18} />
+          邮件申请
+        </a>
+        <a
+          href="https://github.com/Swayopus/Crepusopia/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                 bg-[var(--color-bg-alt)] text-[var(--color-text-muted)]
+                 hover:text-[var(--color-text)] hover:bg-[var(--color-border)]
+                 transition-colors text-base leading-snug"
+        >
+          <Icon name="github" size={18} />
+          GitHub Issue
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+{/* ===== 客户端剪贴板逻辑 ===== */}
+<script>
+  import "../scripts/friends";
+</script>

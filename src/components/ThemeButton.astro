@@ -1,0 +1,19 @@
+---
+// @component ThemeButton — 使用统一图标库，亮色显示月亮，暗色显示太阳。
+import Icon from "./Icon.astro";
+---
+
+{/* 两种状态共享 18px 图标尺寸及同一个 icon-btn 居中容器，切换时不位移。 */}
+<button id="theme-toggle-btn" type="button" class="icon-btn" aria-label="切换明暗主题">
+  <span data-theme-icon="sun" class="hidden dark:inline-flex"><Icon name="sun" size={18} /></span>
+  <span data-theme-icon="moon" class="inline-flex dark:hidden"><Icon name="moon" size={18} /></span>
+</button>
+
+{/*
+  主题切换按钮点击逻辑。
+  applyTheme() 和 astro:after-swap 已在 Head.astro 中统一注册，
+  此处仅处理按钮点击事件。
+*/}
+<script>
+  import "@/scripts/theme";
+</script>

@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.woff2 binary
+*.ttf binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.avif binary
+
+# Exclude generated font tables, bundled font assets, and docs from GitHub language stats
+src/styles/font-subsets.css linguist-generated=true
+public/fonts/** linguist-vendored=true
+docs/** linguist-documentation=true

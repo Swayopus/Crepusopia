@@ -1,0 +1,26 @@
+/* dark: 跟随按钮设置的 .dark；字体配置统一在 global.css 和 font.css 中维护。 */
+@import "./global.css";
+@custom-variant dark (&:where(.dark, .dark *));
+/* 三列布局及偏移至少需要约 1800px；半屏和触屏设备用抽屉，避免牺牲阅读字号。 */
+@custom-variant lg (@media (min-width: 1800px) and (hover: hover) and (pointer: fine));
+
+/* 整页统一缩放，原有组件字号、间距和三列布局不分别调整。 */
+@media (min-width: 1800px) and (hover: hover) and (pointer: fine) {
+  body {
+    zoom: var(--page-scale, 1);
+  }
+}
+
+/* 根据视口宽度限制整体右移，避免较窄桌面出现横向溢出。 */
+@media (min-width: 1800px) and (hover: hover) and (pointer: fine) {
+  .site-layout {
+    translate: clamp(0px, calc((var(--page-width, 100vw) - 87rem) / 2), 6rem) 0;
+  }
+}
+
+/* 手机和平板目录跳转时给吸顶栏留出空间。与 lg 条件互补，避免断点空隙。 */
+@media not all and (min-width: 1800px) and (hover: hover) and (pointer: fine) {
+  main :is(h2, h3, h4)[id] {
+    scroll-margin-top: 5rem;
+  }
+}
