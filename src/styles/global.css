@@ -219,6 +219,21 @@ a {
   }
 }
 
+/* 正文与随记中的行内链接不能只靠颜色区分（满足 WCAG link-in-text-block）；脚注角标与回跳控件保持原样。 */
+:is(.prose, .status-body) a:not([data-footnote-ref]):not([data-footnote-backref]) {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
 blockquote {
   border-left: 3px solid var(--color-primary);
   padding-left: 1rem;
